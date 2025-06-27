@@ -1,4 +1,4 @@
-package org.project.backend.entity;
+package org.project.backend.DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
