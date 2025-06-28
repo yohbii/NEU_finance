@@ -27,4 +27,11 @@ public interface UserMapper {
             "WHERE username = #{username}")
     User findByUsername(@Param("username") String username);
 
+    @Insert("INSERT INTO `user` " +
+            "(id, real_name, username, password, roles, status) " +
+            "VALUES " +
+            "(#{id}, #{realName}, #{username}, #{password}, #{roles, typeHandler=org.project.backend.utils.JsonListTypeHandler}, #{status})")
+    @Options(useGeneratedKeys = false)
+    int insert(User user);
+
 }

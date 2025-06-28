@@ -1,14 +1,15 @@
 package org.project.backend.service;
 
 import org.project.backend.DTO.HttpResponse;
+import org.project.backend.DTO.RegistRequest;
 import org.project.backend.entity.User;
 import org.project.backend.mapper.UserMapper;
 import org.project.backend.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class LoginService {
@@ -48,6 +49,27 @@ public class LoginService {
         User user = userMapper.findByUsername(username);
 
         return new HttpResponse<>(0, user, "ok", "ok");
+    }
+
+    public HttpResponse<Void> register(RegistRequest registRequest) {
+        User user = new User();
+        user.setUsername(registRequest.getUsername());
+        user.setPassword(registRequest.getPassword());
+        user.setRealName(registRequest.getRealName());
+        user.setStatus(1);
+        List<String> roles = new ArrayList<>();
+        roles.add("user");
+        user.setRoles(roles);
+        user.setId(UUID.randomUUID().toString());
+
+        try{
+            userMapper.insert(user);
+        } catch (Exception e) {
+            return new HttpResponse<>(-1, null, "用户名已存在", "用户名已存在");
+        }
+
+
+        return new HttpResponse<>(0, null, "ok", null);
     }
 
 

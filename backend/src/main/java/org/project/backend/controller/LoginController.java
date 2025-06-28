@@ -2,6 +2,7 @@ package org.project.backend.controller;
 
 
 import org.project.backend.DTO.HttpResponse;
+import org.project.backend.DTO.RegistRequest;
 import org.project.backend.entity.User;
 import org.project.backend.service.LoginService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,5 +38,10 @@ public class LoginController {
     @RequestMapping("/auth/codes")
     public HttpResponse<List<String>> getAuthCodes(@RequestHeader("authorization") String authHeader) {
         return new HttpResponse<>(0, new ArrayList<>(), "ok", null);
+    }
+
+    @RequestMapping("/auth/regist")
+    public HttpResponse<Void> register(@RequestBody RegistRequest registRequest) {
+        return loginService.register(registRequest);
     }
 }
