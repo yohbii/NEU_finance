@@ -37,7 +37,7 @@ public class FundService {
         if (funds == null || funds.isEmpty()) {
             return new HttpResponse<>(-1, null, "没有查到相关基金", "没有查到相关基金");
         }
-        return new HttpResponse<>(0, funds, "查询成功", null);
+        return new HttpResponse<>(0, funds, "ok", null);
     }
 
     /**
@@ -51,7 +51,7 @@ public class FundService {
         if (funds == null || funds.isEmpty()) {
             return new HttpResponse<>(-1, null, "没有查到相关基金", "没有查到相关基金");
         }
-        return new HttpResponse<>(0, funds, "查询成功", null);
+        return new HttpResponse<>(0, funds, "ok", null);
     }
 
     /**
@@ -66,7 +66,7 @@ public class FundService {
         if (funds == null || funds.isEmpty()) {
             return new HttpResponse<>(-1, null, "没有查到相关基金", "没有查到相关基金");
         }
-        return new HttpResponse<>(0, funds, "查询成功", null);
+        return new HttpResponse<>(0, funds, "ok", null);
     }
 
     /**
@@ -80,7 +80,7 @@ public class FundService {
         if (funds == null || funds.isEmpty()) {
             return new HttpResponse<>(-1, null, "没有查到相关基金", "没有查到相关基金");
         }
-        return new HttpResponse<>(0, funds, "查询成功", null);
+        return new HttpResponse<>(0, funds, "ok", null);
     }
 
     /**
@@ -95,7 +95,7 @@ public class FundService {
         if (funds == null || funds.isEmpty()) {
             return new HttpResponse<>(-1, null, "没有查到相关基金", "没有查到相关基金");
         }
-        return new HttpResponse<>(0, funds, "查询成功", null);
+        return new HttpResponse<>(0, funds, "ok", null);
     }
 
     /**
@@ -109,6 +109,6 @@ public class FundService {
         if (funds == null || funds.isEmpty()) {
             return new HttpResponse<>(-1, null, "没有查到相关基金", "没有查到相关基金");
         }
-        return new HttpResponse<>(0, funds, "查询成功", null);
+        return new HttpResponse<>(0, funds, "ok", null);
     }
 }

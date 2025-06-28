@@ -8,11 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
 public class PortfolioService {
-
     /**
      * 基金组合与持仓权重Mapper
      */
@@ -21,12 +21,6 @@ public class PortfolioService {
 
     /**
      * 创建一个新的基金组合，并批量向组合中添加基金及对应权重
-     *
-     * @param portfolioName 组合名称
-     * @param createdBy     创建人
-     * @param fundList      基金及权重列表，每个元素包含fundCode和weight
-     * @param note          组合备注信息，可选
-     * @return 新组合ID的HttpResponse，失败时返回-1
      */
     @Transactional
     public HttpResponse<Integer> addFundPortfolio(String portfolioName, String createdBy, List<PortfolioFundParam> fundList, String note) {
@@ -35,20 +29,46 @@ public class PortfolioService {
         pf.setCreatedBy(createdBy);
         pf.setNote(note);
         int insertCount = portfolioMapper.insertPortfolio(pf);
-
         if (insertCount <= 0 || pf.getPortfolioId() == null) {
             return new HttpResponse<>(-1, null, "组合新增失败", "组合新增失败");
         }
         Integer portfolioId = pf.getPortfolioId();
-
-        int succCount = 0;
         for (PortfolioFundParam item : fundList) {
             int result = portfolioMapper.addFundToPortfolio(portfolioId, item.getFundCode(), item.getWeight());
-            succCount += result;
         }
-        if (succCount != fundList.size()) {
-            return new HttpResponse<>(-1, portfolioId, "部分基金加入组合失败", "部分基金加入组合失败");
+        return new HttpResponse<>(0, portfolioId, "ok", null);
+    }
+
+    /**
+     * 查询所有基金组合
+     */
+    public HttpResponse<List<Portfolio>> getAllPortfolios() {
+        List<Portfolio> portfolios = portfolioMapper.getAllPortfolios();
+        if (portfolios == null || portfolios.isEmpty()) {
+            return new HttpResponse<>(-1, null, "无组合数据", "无组合数据");
         }
-        return new HttpResponse<>(0, portfolioId, "基金组合添加成功", null);
+        return new HttpResponse<>(0, portfolios, "ok", null);
+    }
+
+    /**
+     * 根据组合ID查询单个基金组合（含明细）
+     */
+    public HttpResponse<Portfolio> getPortfolioById(Integer portfolioId) {
+        Portfolio portfolio = portfolioMapper.getPortfolioById(portfolioId);
+        if (portfolio == null) {
+            return new HttpResponse<>(-1, null, "未找到该组合", "未找到该组合");
+        }
+        return new HttpResponse<>(0, portfolio, "ok", null);
+    }
+
+    /**
+     * 查询某个用户创建的所有基金组合
+     */
+    public HttpResponse<List<Portfolio>> getPortfoliosByCreator(String createdBy) {
+        List<Portfolio> portfolios = portfolioMapper.getPortfoliosByCreator(createdBy);
+        if (portfolios == null || portfolios.isEmpty()) {
+            return new HttpResponse<>(-1, null, "该用户暂无组合", "该用户暂无组合");
+        }
+        return new HttpResponse<>(0, portfolios, "ok", null);
     }
 }
