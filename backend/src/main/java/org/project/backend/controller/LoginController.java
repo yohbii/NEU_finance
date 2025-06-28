@@ -9,10 +9,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
-@Controller
+@RestController
 public class LoginController {
     private final LoginService loginService;
 
@@ -29,5 +32,10 @@ public class LoginController {
     @RequestMapping("/user/info")
     public HttpResponse<User> getUserInfo(@RequestHeader("authorization") String authHeader) {
         return loginService.getUserInfo(authHeader);
+    }
+
+    @RequestMapping("/auth/codes")
+    public HttpResponse<List<String>> getAuthCodes(@RequestHeader("authorization") String authHeader) {
+        return new HttpResponse<>(0, new ArrayList<>(), "ok", null);
     }
 }

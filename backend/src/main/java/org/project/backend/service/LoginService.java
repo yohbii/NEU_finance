@@ -38,8 +38,17 @@ public class LoginService {
         String token = authHeader.startsWith("Bearer ")
                 ? authHeader.substring(7).trim()
                 : authHeader.trim();
-        String username = jwtUtil.getUsernameFromToken(token);
+        String username;
+        try {
+            username = jwtUtil.getUsernameFromToken(token);
+        } catch (Exception e) {
+            return new HttpResponse<>(-1, null, "accessToken不存在", "accessToken不存在");
+        }
 
+        User user = userMapper.findByUsername(username);
 
+        return new HttpResponse<>(0, user, "ok", "ok");
     }
+
+
 }
