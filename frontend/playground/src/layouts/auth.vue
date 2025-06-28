@@ -18,6 +18,7 @@ const clickLogo = () => {};
     :page-description="$t('authentication.pageDesc')"
     :page-title="$t('authentication.pageTitle')"
     :click-logo="clickLogo"
+    :copyright="false"
   >
     <!-- 自定义工具栏 -->
     <!-- <template #toolbar></template> -->
