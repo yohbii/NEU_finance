@@ -68,9 +68,6 @@ public class LoginService {
             return new HttpResponse<>(-1, null, "用户名已存在", "用户名已存在");
         }
 
-
         return new HttpResponse<>(0, null, "ok", null);
     }
-
-
 }
