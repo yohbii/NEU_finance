@@ -7,12 +7,24 @@ import { computed, h, ref } from 'vue';
 import { AuthenticationRegister, z } from '@vben/common-ui';
 import { $t } from '@vben/locales';
 
+import { registerApi } from '#/api';
+import { useAuthStore } from '#/store/auth';
+
 defineOptions({ name: 'Register' });
 
 const loading = ref(false);
 
 const formSchema = computed((): VbenFormSchema[] => {
   return [
+    {
+      component: 'VbenInput',
+      componentProps: {
+        placeholder: $t('authentication.realNameTip'),
+      },
+      fieldName: 'realName',
+      label: $t('authentication.realName'),
+      rules: z.string().min(2, { message: $t('authentication.realNameTip') }),
+    },
     {
       component: 'VbenInput',
       componentProps: {
@@ -81,9 +93,16 @@ const formSchema = computed((): VbenFormSchema[] => {
   ];
 });
 
-function handleSubmit(value: Recordable<any>) {
+async function handleSubmit(value: Recordable<any>) {
   // eslint-disable-next-line no-console
   console.log('register submit:', value);
+  await registerApi({
+    password: value.password,
+    realName: value.realName,
+    username: value.username,
+  });
+  const authStore = useAuthStore();
+  authStore.authLogin(value);
 }
 </script>
 
