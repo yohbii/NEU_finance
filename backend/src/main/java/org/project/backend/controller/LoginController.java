@@ -44,4 +44,9 @@ public class LoginController {
     public HttpResponse<Void> register(@RequestBody RegistRequest registRequest) {
         return loginService.register(registRequest);
     }
+
+    @RequestMapping("/auth/logout")
+    public HttpResponse<String> logout() {
+        return new HttpResponse<>(0, "", "ok", null);
+    }
 }

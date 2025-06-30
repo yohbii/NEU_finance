@@ -47,6 +47,9 @@ public class LoginService {
         }
 
         User user = userMapper.findByUsername(username);
+        if (null == user) {
+            return new HttpResponse<>(-1, null, "未知用户或者cookie已过期", "未知用户或者cookie已过期");
+        }
 
         return new HttpResponse<>(0, user, "ok", "ok");
     }
