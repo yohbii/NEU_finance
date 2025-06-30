@@ -1,4 +1,3 @@
-// --- 数据模型定义 ---
 type FactorSource = 'DATABASE' | 'PYTHON';
 
 interface Factor {
