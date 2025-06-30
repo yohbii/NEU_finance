@@ -1,0 +1,14 @@
+{
+  "color": [
+    { "name": "sidebar_bg", "value": "#2c3e50" },
+    { "name": "sidebar_text", "value": "#bdc3c7" },
+    { "name": "sidebar_text_selected", "value": "#ffffff" },
+    { "name": "sidebar_item_selected_bg", "value": "#3498db" },
+    { "name": "main_bg", "value": "#f5f7fa" },
+    { "name": "card_bg", "value": "#ffffff" },
+    { "name": "font_primary", "value": "#2c3e50" },
+    { "name": "font_secondary", "value": "#8a8a8a" },
+    { "name": "positive_green", "value": "#27ae60" },
+    { "name": "negative_red", "value": "#c0392b" }
+  ]
+}
