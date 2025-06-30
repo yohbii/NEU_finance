@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from models.factor import DerivativeFactorCreateRequest, FactorCreateResponse
-from services import factor_service
+from app.models.factor import DerivativeFactorCreateRequest, FactorCreateResponse
+from app.services import factor_service
 
 router = APIRouter()
 

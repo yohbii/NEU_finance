@@ -4,7 +4,7 @@ import random
 from datetime import datetime
 from typing import Dict, Any
 
-from models.strategy import BacktestRequest, BacktestMetrics
+from app.models.strategy import BacktestRequest, BacktestMetrics
 
 TASKS_DB: Dict[str, Dict[str, Any]] = {}
 

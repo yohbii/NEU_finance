@@ -4,8 +4,8 @@
 from fastapi import APIRouter, HTTPException
 from typing import Any
 
-from models.strategy import TaskStatusResponse
-from services.backtest_service import TASKS_DB
+from app.models.strategy import TaskStatusResponse
+from app.services.backtest_service import TASKS_DB
 
 router = APIRouter()
 
