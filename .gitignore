@@ -49,3 +49,6 @@ vite.config.ts.*
 *.sln
 *.sw?
 .history
+
+# python factor
+__pycache__

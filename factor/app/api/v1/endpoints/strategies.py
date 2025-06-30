@@ -1,7 +1,7 @@
 from fastapi import APIRouter, BackgroundTasks
-from app.models.strategy import BacktestRequest, TaskResponse
+from models.strategy import BacktestRequest, TaskResponse
 
-from app.services import backtest_service
+from services import backtest_service
 
 router = APIRouter()
 

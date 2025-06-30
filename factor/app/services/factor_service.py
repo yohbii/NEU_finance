@@ -1,7 +1,7 @@
 import pandas as pd
 import uuid
 from typing import List
-from app.models.factor import BaseFactorInfo
+from models.factor import BaseFactorInfo
 
 # create new factor service
 def create_new_derivative_factor(name: str, description: str, base_factors_info: List[BaseFactorInfo]) -> str:
