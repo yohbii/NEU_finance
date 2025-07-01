@@ -7,6 +7,9 @@ import java.util.List;
 @Mapper
 public interface ProductComboFundMapper {
 
+    @Delete("DELETE FROM product_combo_fund WHERE combo_id=#{comboId}")
+    int deleteByComboId(Long comboId);
+
     @Insert("INSERT INTO product_combo_fund " +
             "(combo_id, fund_code, fund_name, weight, position) " +
             "VALUES (#{comboId}, #{fundCode}, #{fundName}, #{weight}, #{position})")
@@ -22,7 +25,4 @@ public interface ProductComboFundMapper {
 
     @Delete("DELETE FROM product_combo_fund WHERE id=#{id}")
     int deleteById(Long id);
-
-    @Delete("DELETE FROM product_combo_fund WHERE combo_id=#{comboId}")
-    int deleteByComboId(Long comboId);
 }
