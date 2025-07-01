@@ -9,7 +9,7 @@ from app.core.strategy_engine import backtester, metrics, signal_generator
 TASKS_DB: Dict[str, Dict[str, Any]] = {}
 
 def run_real_backtest(task_id: str, request: BacktestRequest):
-    print(f"任务 {task_id}: 开始执行真实回测，策略为 '{request.strategy_name}'")
+    print(f"任务 {task_id}: 开始执行回测，策略为 '{request.strategy_name}'")
     TASKS_DB[task_id]["status"] = "running"
     TASKS_DB[task_id]["started_at"] = datetime.now()
 
