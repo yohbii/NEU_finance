@@ -26,13 +26,13 @@ flowchart LR
   subgraph "Frontend (Vue 3 + Vite)"
     A[Browser] --> B(Widget SPA)
   end
-  subgraph Backend ( Spring Boot 3 )
+  subgraph "Backend ( Spring Boot 3 )"
     C(API Gateway) --> D(User Service)
     C --> E(Portfolio Service)
     C --> F(Risk Engine)
     F --> G[MySQL]
   end
-  subgraph Research Layer
+  subgraph "Research Layer"
     H[Jupyter / Python CLI] --> E
   end
   A <--> C
