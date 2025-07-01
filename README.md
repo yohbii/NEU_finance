@@ -1,7 +1,5 @@
 # 🦉 NEU Finance<br/>*open-source Robo-Advisor & Quant-Factor Research Platform*
 
-[![Build & Test – Backend](https://img.shields.io/github/actions/workflow/status/yohbii/NEU_finance/backend-ci.yml?label=backend&logo=github)](../../actions)
-[![Build & Test – Frontend](https://img.shields.io/github/actions/workflow/status/yohbii/NEU_finance/frontend-ci.yml?label=frontend&logo=github)](../../actions)
 [![Code Style](https://img.shields.io/badge/code%20style-Prettier-blue.svg)](https://prettier.io)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -25,7 +23,7 @@
 
 ```mermaid
 flowchart LR
-  subgraph Frontend ( Vue 3 + Vite )
+  subgraph "Frontend (Vue 3 + Vite)"
     A[Browser] --> B(Widget SPA)
   end
   subgraph Backend ( Spring Boot 3 )
@@ -41,7 +39,6 @@ flowchart LR
   H --gRPC--> C
 ````
 
-> *Diagram source: `/docs/architecture.mmd` – edit & regenerate at will.*
 
 ---
 
