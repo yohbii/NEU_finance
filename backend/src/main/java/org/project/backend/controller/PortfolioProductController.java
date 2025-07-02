@@ -1,3 +1,5 @@
+package org.project.backend.controller;
+
 @RestController
 @RequestMapping("/api/portfolio-products")
 @Tag(name = "组合产品管理子系统", description = "提供组合产品创建、审核、上架和详情管理功能")
