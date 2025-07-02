@@ -1,14 +1,10 @@
 from fastapi import FastAPI
-from app.api.v1.routers import api_router
-from app.core.config import settings
+from app.api.strategy import router as strategy_router
 
-app = FastAPI(
-    title=settings.PROJECT_NAME, 
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
-)
+app = FastAPI(title="智能投顾策略测试平台")
 
-app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(strategy_router, prefix="/api/strategy", tags=["StrategyTest"])
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Quant Engine!"}
+    return {"message": "欢迎使用智能投顾策略测试平台！"}

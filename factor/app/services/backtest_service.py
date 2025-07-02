@@ -61,3 +61,4 @@ def start_backtest_task(request: BacktestRequest, background_tasks) -> str:
     
     print(f"已提交新任务，ID为: {task_id}")
     return task_id
+
