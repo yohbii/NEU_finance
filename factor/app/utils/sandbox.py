@@ -1,6 +1,10 @@
 import pandas as pd
+import numpy as np
 import traceback
+import datetime as dt
+import math
 from typing import Union
+import re
 
 def run_user_code(code: str, price_df: pd.DataFrame, params: dict) -> pd.Series:
     if not isinstance(code, str) or not code.strip():
@@ -16,19 +20,16 @@ def run_user_code(code: str, price_df: pd.DataFrame, params: dict) -> pd.Series:
         raise TypeError('params 必须是字典类型')
     
     try:
-        # 执行用户代码 - 使用更安全的方式
-        local_vars = {}
+        local_env = {}
         try:
             compiled_code = compile(code, '<string>', 'exec')
-            exec(compiled_code, {}, local_vars)
+            exec(compiled_code, local_env, local_env)
         except (SyntaxError, NameError) as e:
             raise ValueError(f'代码编译或执行失败: {str(e)}')
-        
         # 检查是否定义了 generate_signal 函数
-        if 'generate_signal' not in local_vars:
+        if 'generate_signal' not in local_env:
             raise ValueError('策略代码中必须定义 generate_signal(price_df, params) 函数')
-        
-        generate_signal_func = local_vars['generate_signal']
+        generate_signal_func = local_env['generate_signal']
         if not callable(generate_signal_func):
             raise ValueError('generate_signal 必须是一个可调用的函数')
         
@@ -61,4 +62,4 @@ def run_user_code(code: str, price_df: pd.DataFrame, params: dict) -> pd.Series:
         error_msg = f'代码执行出错: {str(e)}'
         if hasattr(e, '__traceback__'):
             error_msg += f'\n详细错误信息: {traceback.format_exc()}'
-        raise ValueError(error_msg) 
+        raise ValueError(error_msg)
