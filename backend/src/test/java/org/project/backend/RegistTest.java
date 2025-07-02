@@ -15,6 +15,27 @@ public class RegistTest {
         registTest = new RegistTest();
     }
 
+
+    @Test
+    @DisplayName("Test doRegist success")
+    void testDoRegistSuccess() {
+        assertDoesNotThrow(() -> registTest.doRegist("lisi", "654321"));
+    }
+
+    @Test
+    @DisplayName("Test doRegist fail for invalid username")
+    void testDoRegistFailUsername() {
+        Exception e = assertThrows(IllegalArgumentException.class, () -> registTest.doRegist("", "abcdef"));
+        assertEquals("用户名无效", e.getMessage());
+    }
+
+    @Test
+    @DisplayName("Test doRegist fail for short password")
+    void testDoRegistFailPassword() {
+        Exception e = assertThrows(IllegalArgumentException.class, () -> registTest.doRegist("wangwu", "123"));
+        assertEquals("密码太短", e.getMessage());
+    }
+
     /**
      * 假设将来注册要判断用户名是否为空，这里演示下行为
      */
@@ -39,7 +60,6 @@ public class RegistTest {
         if (!isValidPassword(password)) {
             throw new IllegalArgumentException("密码太短");
         }
-        // 省略注册过程
     }
 
     @Test
@@ -59,23 +79,5 @@ public class RegistTest {
         assertFalse(registTest.isValidPassword(null));
     }
 
-    @Test
-    @DisplayName("Test doRegist success")
-    void testDoRegistSuccess() {
-        assertDoesNotThrow(() -> registTest.doRegist("lisi", "654321"));
-    }
 
-    @Test
-    @DisplayName("Test doRegist fail for invalid username")
-    void testDoRegistFailUsername() {
-        Exception e = assertThrows(IllegalArgumentException.class, () -> registTest.doRegist("", "abcdef"));
-        assertEquals("用户名无效", e.getMessage());
-    }
-
-    @Test
-    @DisplayName("Test doRegist fail for short password")
-    void testDoRegistFailPassword() {
-        Exception e = assertThrows(IllegalArgumentException.class, () -> registTest.doRegist("wangwu", "123"));
-        assertEquals("密码太短", e.getMessage());
-    }
 }
