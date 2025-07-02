@@ -1,10 +1,21 @@
 import pandas as pd
 
 def calculate_sma(price_series: pd.Series, window: int) -> pd.Series:
-    return price_series.rolling(window=window, min_periods=1).mean()
+    result = price_series.rolling(window=window, min_periods=1).mean()
+    if isinstance(result, pd.DataFrame):
+        # 取第一个列（通常不会出现，但防御性处理）
+        result = result.iloc[:, 0]
+    if not isinstance(result, pd.Series):
+        result = pd.Series(result, index=price_series.index)
+    return result
 
 def calculate_ema(price_series: pd.Series, window: int) -> pd.Series:
-    return price_series.ewm(span=window, adjust=False, min_periods=1).mean()
+    result = price_series.ewm(span=window, adjust=False, min_periods=1).mean()
+    if isinstance(result, pd.DataFrame):
+        result = result.iloc[:, 0]
+    if not isinstance(result, pd.Series):
+        result = pd.Series(result, index=price_series.index)
+    return result
 
 def calculate_rsi(price_series: pd.Series, window: int = 14) -> pd.Series:
     delta = price_series.diff()
@@ -16,6 +27,10 @@ def calculate_rsi(price_series: pd.Series, window: int = 14) -> pd.Series:
     
     rs = avg_gain / avg_loss
     rsi = 100 - (100 / (1 + rs))
+    if isinstance(rsi, pd.DataFrame):
+        rsi = rsi.iloc[:, 0]
+    if not isinstance(rsi, pd.Series):
+        rsi = pd.Series(rsi, index=price_series.index)
     return rsi
 
 def calculate_macd(price_series: pd.Series, fast_window: int = 12, slow_window: int = 26, signal_window: int = 9):
