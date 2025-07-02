@@ -16,9 +16,13 @@ def run_user_code(code: str, price_df: pd.DataFrame, params: dict) -> pd.Series:
         raise TypeError('params 必须是字典类型')
     
     try:
-        # 执行用户代码
+        # 执行用户代码 - 使用更安全的方式
         local_vars = {}
-        exec(code, {}, local_vars)
+        try:
+            compiled_code = compile(code, '<string>', 'exec')
+            exec(compiled_code, {}, local_vars)
+        except (SyntaxError, NameError) as e:
+            raise ValueError(f'代码编译或执行失败: {str(e)}')
         
         # 检查是否定义了 generate_signal 函数
         if 'generate_signal' not in local_vars:
@@ -54,7 +58,6 @@ def run_user_code(code: str, price_df: pd.DataFrame, params: dict) -> pd.Series:
     except NameError as e:
         raise ValueError(f'代码中使用了未定义的变量或函数: {str(e)}')
     except Exception as e:
-        # 捕获其他未预期的错误
         error_msg = f'代码执行出错: {str(e)}'
         if hasattr(e, '__traceback__'):
             error_msg += f'\n详细错误信息: {traceback.format_exc()}'

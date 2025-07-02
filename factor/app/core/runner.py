@@ -35,4 +35,4 @@ def run_strategy_code(code: str, params: dict, symbol: str, start_date: str, end
         "sharpe_ratio": float(sharpe_ratio),
         "equity_curve": equity_curve.tolist(),
         "dates": [date.strftime('%Y-%m-%d') for date in price_df.index]
-    } 
+    }
