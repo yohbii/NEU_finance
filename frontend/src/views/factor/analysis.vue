@@ -267,6 +267,7 @@
 <script setup>
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
+import * as echarts from 'echarts'
 import {
   Setting,
   Link,
@@ -362,13 +363,19 @@ const initCharts = () => {
 const initCorrelationChart = () => {
   if (!correlationChart.value) return
 
+  // 销毁旧实例，防止重复渲染
+  if (correlationChart.value.__echarts__) {
+    echarts.dispose(correlationChart.value)
+  }
   const chart = echarts.init(correlationChart.value)
   const factors = analysisResult.value.factors
-  const data = []
+  const matrix = analysisResult.value.correlationMatrix
 
+  // 组装热力图数据
+  const data = []
   factors.forEach((factor1, i) => {
     factors.forEach((factor2, j) => {
-      const value = analysisResult.value.correlationMatrix[i][factor2]
+      const value = matrix[i][factor2]
       data.push([i, j, value])
     })
   })
@@ -381,22 +388,18 @@ const initCorrelationChart = () => {
       }
     },
     grid: {
-      height: '50%',
+      height: '60%',
       top: '10%'
     },
     xAxis: {
       type: 'category',
       data: factors,
-      splitArea: {
-        show: true
-      }
+      splitArea: { show: true }
     },
     yAxis: {
       type: 'category',
       data: factors,
-      splitArea: {
-        show: true
-      }
+      splitArea: { show: true }
     },
     visualMap: {
       min: -1,
@@ -404,9 +407,12 @@ const initCorrelationChart = () => {
       calculable: true,
       orient: 'horizontal',
       left: 'center',
-      bottom: '15%',
+      bottom: '5%',
       inRange: {
-        color: ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
+        color: [
+          '#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8',
+          '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026'
+        ]
       }
     },
     series: [{
@@ -429,6 +435,10 @@ const initCorrelationChart = () => {
   }
 
   chart.setOption(option)
+  // 自适应
+  window.addEventListener('resize', () => {
+    chart.resize()
+  })
 }
 
 // 初始化贡献度图表
@@ -618,14 +628,30 @@ onMounted(() => {
   const endDate = new Date()
   const startDate = new Date()
   startDate.setFullYear(endDate.getFullYear() - 1)
-  
   analysisConfig.dateRange = [
     startDate.toISOString().split('T')[0],
     endDate.toISOString().split('T')[0]
   ]
-  
   // 默认选择前4个因子
   analysisConfig.selectedFactors = factorOptions.value.slice(0, 4).map(f => f.id)
+
+  // ====== 以下为调试用：页面加载直接渲染热力图 ======
+  analysisResult.value = {
+    factors: ['市盈率', '市净率', 'ROE', '营收增长率', '净利润增长率'],
+    correlationMatrix: [
+      { factor: '市盈率', '市盈率': 1, '市净率': 0.65, 'ROE': -0.23, '营收增长率': 0.12, '净利润增长率': 0.18 },
+      { factor: '市净率', '市盈率': 0.65, '市净率': 1, 'ROE': -0.31, '营收增长率': 0.08, '净利润增长率': 0.15 },
+      { factor: 'ROE', '市盈率': -0.23, '市净率': -0.31, 'ROE': 1, '营收增长率': 0.45, '净利润增长率': 0.52 },
+      { factor: '营收增长率', '市盈率': 0.12, '市净率': 0.08, 'ROE': 0.45, '营收增长率': 1, '净利润增长率': 0.78 },
+      { factor: '净利润增长率', '市盈率': 0.18, '市净率': 0.15, 'ROE': 0.52, '营收增长率': 0.78, '净利润增长率': 1 }
+    ]
+  }
+  nextTick(() => {
+    // 调试输出，确保DOM和ECharts可用
+    console.log('correlationChart dom:', correlationChart.value)
+    console.log('container height:', correlationChart.value?.offsetHeight)
+    initCorrelationChart()
+  })
 })
 </script>
 
@@ -678,6 +704,7 @@ onMounted(() => {
 .chart-container {
   height: 400px;
   width: 100%;
+  min-height: 400px;
 }
 
 .correlation-analysis h4,
