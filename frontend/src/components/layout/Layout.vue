@@ -150,7 +150,8 @@ const menuData = ref([
     title: '策略管理',
     icon: 'TrendCharts',
     children: [
-      { title: '策略列表', link: '/strategy/list' }
+      { title: '策略列表', link: '/strategy/list' },
+      { title: '自定义策略', link: '/strategy/backtest' }
     ]
   },
   {

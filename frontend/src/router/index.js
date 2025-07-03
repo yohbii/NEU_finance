@@ -122,12 +122,13 @@ const baseRoutes = [
             }
           },
           {
-            path: ':id/backtest',
-            name: 'StrategyBacktest',
+            path: 'backtest',
+            name: 'StrategyBacktestStandalone',
             component: () => import('@/views/strategy/backtest.vue'),
             meta: {
-              title: '策略回测',
-              requiresAuth: true
+              title: '自定义策略',
+              requiresAuth: true,
+              icon: 'EditPen'
             }
           }
         ]

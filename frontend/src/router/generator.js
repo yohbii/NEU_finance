@@ -30,7 +30,8 @@ export function generateRoutes() {
     strategy: {
       meta: { title: '策略管理', icon: 'strategy' },
       children: {
-        list: { title: '策略列表', permissions: ['strategy:view'] }
+        list: { title: '策略列表', permissions: ['strategy:view'] },
+        backtest: { title: '自定义策略', permissions: ['strategy:view'], icon: 'code' }
       }
     },
     product: {
