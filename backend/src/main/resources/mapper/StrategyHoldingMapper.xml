@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.advisor.mapper.StrategyHoldingMapper">
+
+    <resultMap id="BaseResultMap" type="com.advisor.entity.StrategyHolding">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="strategy_id" property="strategyId" jdbcType="BIGINT"/>
+        <result column="asset_code" property="assetCode" jdbcType="VARCHAR"/>
+        <result column="asset_name" property="assetName" jdbcType="VARCHAR"/>
+        <result column="asset_type" property="assetType" jdbcType="VARCHAR"/>
+        <result column="target_weight" property="targetWeight" jdbcType="DECIMAL"/>
+        <result column="current_weight" property="currentWeight" jdbcType="DECIMAL"/>
+        <result column="target_amount" property="targetAmount" jdbcType="DECIMAL"/>
+        <result column="current_amount" property="currentAmount" jdbcType="DECIMAL"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, strategy_id, asset_code, asset_name, asset_type, target_weight,
+        current_weight, target_amount, current_amount, created_at, updated_at
+    </sql>
+
+    <select id="findByStrategyId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM strategy_holding
+        WHERE strategy_id = #{strategyId}
+        ORDER BY target_weight DESC
+    </select>
+
+    <select id="findById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM strategy_holding
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByStrategyIdAndAssetCode" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM strategy_holding
+        WHERE strategy_id = #{strategyId}
+        AND asset_code = #{assetCode}
+    </select>
+
+    <insert id="insert" parameterType="com.advisor.entity.StrategyHolding" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO strategy_holding (
+            strategy_id, asset_code, asset_name, asset_type, target_weight,
+            current_weight, target_amount, current_amount
+        ) VALUES (
+            #{strategyId}, #{assetCode}, #{assetName}, #{assetType}, #{targetWeight},
+            #{currentWeight}, #{targetAmount}, #{currentAmount}
+        )
+    </insert>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO strategy_holding (
+            strategy_id, asset_code, asset_name, asset_type, target_weight,
+            current_weight, target_amount, current_amount
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.strategyId}, #{item.assetCode}, #{item.assetName}, #{item.assetType}, 
+             #{item.targetWeight}, #{item.currentWeight}, #{item.targetAmount}, #{item.currentAmount})
+        </foreach>
+    </insert>
+
+    <update id="update" parameterType="com.advisor.entity.StrategyHolding">
+        UPDATE strategy_holding
+        SET
+        <trim suffixOverrides=",">
+            <if test="assetName != null">asset_name = #{assetName},</if>
+            <if test="assetType != null">asset_type = #{assetType},</if>
+            <if test="targetWeight != null">target_weight = #{targetWeight},</if>
+            <if test="currentWeight != null">current_weight = #{currentWeight},</if>
+            <if test="targetAmount != null">target_amount = #{targetAmount},</if>
+            <if test="currentAmount != null">current_amount = #{currentAmount},</if>
+        </trim>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM strategy_holding WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByStrategyId" parameterType="java.lang.Long">
+        DELETE FROM strategy_holding WHERE strategy_id = #{strategyId}
+    </delete>
+
+</mapper>

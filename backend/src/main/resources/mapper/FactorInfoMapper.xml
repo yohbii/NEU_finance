@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.advisor.mapper.FactorInfoMapper">
+
+    <resultMap id="BaseResultMap" type="com.advisor.entity.FactorInfo">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="factor_code" property="factorCode" jdbcType="VARCHAR"/>
+        <result column="factor_name" property="factorName" jdbcType="VARCHAR"/>
+        <result column="factor_type" property="factorType" jdbcType="VARCHAR"/>
+        <result column="factor_category" property="category" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="LONGVARCHAR"/>
+        <result column="calculation_formula" property="calculationMethod" jdbcType="LONGVARCHAR"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, factor_code, factor_name, factor_type, factor_category, description,
+        calculation_formula, status, created_at, updated_at
+    </sql>
+
+    <select id="findList" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM factor_info
+        WHERE status = 1
+        <if test="factorType != null and factorType != ''">
+            AND factor_type = #{factorType}
+        </if>
+        <if test="category != null and category != ''">
+            AND factor_category = #{category}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (factor_code LIKE CONCAT('%', #{keyword}, '%') 
+                 OR factor_name LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countList" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM factor_info
+        WHERE status = 1
+        <if test="factorType != null and factorType != ''">
+            AND factor_type = #{factorType}
+        </if>
+        <if test="category != null and category != ''">
+            AND factor_category = #{category}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (factor_code LIKE CONCAT('%', #{keyword}, '%') 
+                 OR factor_name LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+    </select>
+
+    <select id="findById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM factor_info
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByFactorCode" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM factor_info
+        WHERE factor_code = #{factorCode}
+        AND status = 1
+    </select>
+
+    <insert id="insert" parameterType="com.advisor.entity.FactorInfo" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO factor_info (
+            factor_code, factor_name, factor_type, factor_category, description,
+            calculation_formula, status
+        ) VALUES (
+            #{factorCode}, #{factorName}, #{factorType}, #{category}, #{description},
+            #{calculationMethod}, #{status}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.advisor.entity.FactorInfo">
+        UPDATE factor_info
+        SET
+        <trim suffixOverrides=",">
+            <if test="factorName != null">factor_name = #{factorName},</if>
+            <if test="factorType != null">factor_type = #{factorType},</if>
+            <if test="category != null">factor_category = #{category},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="calculationMethod != null">calculation_formula = #{calculationMethod},</if>
+            <if test="status != null">status = #{status},</if>
+        </trim>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM factor_info WHERE id = #{id}
+    </delete>
+
+    <select id="findAllFactorTypes" resultType="java.lang.String">
+        SELECT DISTINCT factor_type
+        FROM factor_info
+        WHERE status = 1
+        ORDER BY factor_type
+    </select>
+
+    <select id="findAllCategories" resultType="java.lang.String">
+        SELECT DISTINCT factor_category
+        FROM factor_info
+        WHERE status = 1
+        ORDER BY factor_category
+    </select>
+
+</mapper> 

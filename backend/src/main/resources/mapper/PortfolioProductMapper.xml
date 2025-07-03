@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.advisor.mapper.PortfolioProductMapper">
+
+    <resultMap id="BaseResultMap" type="com.advisor.entity.PortfolioProduct">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="product_code" property="productCode" jdbcType="VARCHAR"/>
+        <result column="product_name" property="productName" jdbcType="VARCHAR"/>
+        <result column="product_type" property="productType" jdbcType="VARCHAR"/>
+        <result column="strategy_id" property="strategyId" jdbcType="BIGINT"/>
+        <result column="risk_level" property="riskLevel" jdbcType="TINYINT"/>
+        <result column="min_investment" property="minInvestment" jdbcType="DECIMAL"/>
+        <result column="management_fee" property="managementFee" jdbcType="DECIMAL"/>
+        <result column="description" property="description" jdbcType="LONGVARCHAR"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, product_code, product_name, product_type, strategy_id, risk_level,
+        min_investment, management_fee, description, status, created_at, updated_at
+    </sql>
+
+    <select id="findList" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM portfolio_product
+        WHERE status = 1
+        <if test="productType != null and productType != ''">
+            AND product_type = #{productType}
+        </if>
+        <if test="riskLevel != null">
+            AND risk_level = #{riskLevel}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (product_code LIKE CONCAT('%', #{keyword}, '%') 
+                 OR product_name LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countList" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM portfolio_product
+        WHERE status = 1
+        <if test="productType != null and productType != ''">
+            AND product_type = #{productType}
+        </if>
+        <if test="riskLevel != null">
+            AND risk_level = #{riskLevel}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (product_code LIKE CONCAT('%', #{keyword}, '%') 
+                 OR product_name LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+    </select>
+
+    <select id="findById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM portfolio_product
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByProductCode" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM portfolio_product
+        WHERE product_code = #{productCode}
+        AND status = 1
+    </select>
+
+    <insert id="insert" parameterType="com.advisor.entity.PortfolioProduct" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO portfolio_product (
+            product_code, product_name, product_type, strategy_id, risk_level,
+            min_investment, management_fee, description, status
+        ) VALUES (
+            #{productCode}, #{productName}, #{productType}, #{strategyId}, #{riskLevel},
+            #{minInvestment}, #{managementFee}, #{description}, #{status}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.advisor.entity.PortfolioProduct">
+        UPDATE portfolio_product
+        SET
+        <trim suffixOverrides=",">
+            <if test="productName != null">product_name = #{productName},</if>
+            <if test="productType != null">product_type = #{productType},</if>
+            <if test="strategyId != null">strategy_id = #{strategyId},</if>
+            <if test="riskLevel != null">risk_level = #{riskLevel},</if>
+            <if test="minInvestment != null">min_investment = #{minInvestment},</if>
+            <if test="managementFee != null">management_fee = #{managementFee},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="status != null">status = #{status},</if>
+        </trim>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM portfolio_product WHERE id = #{id}
+    </delete>
+
+    <select id="findAllProductTypes" resultType="java.lang.String">
+        SELECT DISTINCT product_type
+        FROM portfolio_product
+        WHERE status = 1
+        ORDER BY product_type
+    </select>
+
+    <select id="countAll" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM portfolio_product WHERE status = 1
+    </select>
+
+</mapper>

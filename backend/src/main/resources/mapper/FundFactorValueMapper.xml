@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.advisor.mapper.FundFactorValueMapper">
+
+    <resultMap id="BaseResultMap" type="com.advisor.entity.FundFactorValue">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="fund_code" property="fundCode" jdbcType="VARCHAR"/>
+        <result column="factor_code" property="factorCode" jdbcType="VARCHAR"/>
+        <result column="factor_value" property="factorValue" jdbcType="DECIMAL"/>
+        <result column="value_date" property="valueDate" jdbcType="DATE"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, fund_code, factor_code, factor_value, value_date, created_at, updated_at
+    </sql>
+
+    <select id="findList" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM fund_factor_value
+        WHERE 1 = 1
+        <if test="fundCode != null and fundCode != ''">
+            AND fund_code = #{fundCode}
+        </if>
+        <if test="factorCode != null and factorCode != ''">
+            AND factor_code = #{factorCode}
+        </if>
+        ORDER BY value_date DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countList" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM fund_factor_value
+        WHERE 1 = 1
+        <if test="fundCode != null and fundCode != ''">
+            AND fund_code = #{fundCode}
+        </if>
+        <if test="factorCode != null and factorCode != ''">
+            AND factor_code = #{factorCode}
+        </if>
+    </select>
+
+    <select id="findById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM fund_factor_value
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByFundAndFactor" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM fund_factor_value
+        WHERE fund_code = #{fundCode}
+        AND factor_code = #{factorCode}
+        ORDER BY value_date DESC
+        LIMIT 1
+    </select>
+
+    <select id="findByFundCode" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM fund_factor_value
+        WHERE fund_code = #{fundCode}
+        ORDER BY factor_code, value_date DESC
+    </select>
+
+    <insert id="insert" parameterType="com.advisor.entity.FundFactorValue" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO fund_factor_value (
+            fund_code, factor_code, factor_value, value_date
+        ) VALUES (
+            #{fundCode}, #{factorCode}, #{factorValue}, #{valueDate}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.advisor.entity.FundFactorValue">
+        UPDATE fund_factor_value
+        SET
+        <trim suffixOverrides=",">
+            <if test="factorValue != null">factor_value = #{factorValue},</if>
+            <if test="valueDate != null">value_date = #{valueDate},</if>
+        </trim>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM fund_factor_value WHERE id = #{id}
+    </delete>
+
+    <insert id="batchInsert">
+        INSERT INTO fund_factor_value (fund_code, factor_code, factor_value, value_date)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.fundCode}, #{item.factorCode}, #{item.factorValue}, #{item.valueDate})
+        </foreach>
+    </insert>
+
+</mapper> 
