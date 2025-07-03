@@ -1,14 +1,64 @@
 {
   "color": [
-    { "name": "sidebar_bg", "value": "#2c3e50" },
-    { "name": "sidebar_text", "value": "#bdc3c7" },
-    { "name": "sidebar_text_selected", "value": "#ffffff" },
-    { "name": "sidebar_item_selected_bg", "value": "#3498db" },
-    { "name": "main_bg", "value": "#f5f7fa" },
-    { "name": "card_bg", "value": "#ffffff" },
-    { "name": "font_primary", "value": "#2c3e50" },
-    { "name": "font_secondary", "value": "#8a8a8a" },
-    { "name": "positive_green", "value": "#27ae60" },
-    { "name": "negative_red", "value": "#c0392b" }
+    {
+      "name": "card_bg",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "page_bg",
+      "value": "#F7F8FA"
+    },
+    {
+      "name": "text_primary",
+      "value": "#1F2937"
+    },
+    {
+      "name": "text_secondary",
+      "value": "#6B7280"
+    },
+    {
+      "name": "text_tertiary",
+      "value": "#9CA3AF"
+    },
+    {
+      "name": "border_color",
+      "value": "#E5E7EB"
+    },
+    {
+      "name": "blue_light",
+      "value": "#EFF6FF"
+    },
+    {
+      "name": "blue_dark",
+      "value": "#3B82F6"
+    },
+    {
+      "name": "green_light",
+      "value": "#F0FDF4"
+    },
+    {
+      "name": "green_dark",
+      "value": "#22C55E"
+    },
+    {
+      "name": "yellow_light",
+      "value": "#FEFCE8"
+    },
+    {
+      "name": "yellow_dark",
+      "value": "#EAB308"
+    },
+    {
+      "name": "red_light",
+      "value": "#FEF2F2"
+    },
+    {
+      "name": "red_dark",
+      "value": "#EF4444"
+    },
+    {
+      "name": "orange_dark",
+      "value": "#F59E0B"
+    }
   ]
 }
