@@ -9,28 +9,28 @@
           </el-button>
         </div>
       </template>
-      
+
       <!-- 搜索表单 -->
       <div class="search-form">
         <el-form :model="searchForm" inline>
           <el-form-item label="策略类型">
-            <el-select 
-              v-model="searchForm.strategyType" 
+            <el-select
+              v-model="searchForm.strategyType"
               placeholder="请选择策略类型"
               clearable
               style="width: 200px;"
             >
-              <el-option 
-                v-for="option in strategyTypeOptions" 
-                :key="option.value" 
+              <el-option
+                v-for="option in strategyTypeOptions"
+                :key="option.value"
                 :value="option.value"
                 :label="option.label"
               />
             </el-select>
           </el-form-item>
           <el-form-item label="关键词">
-            <el-input 
-              v-model="searchForm.keyword" 
+            <el-input
+              v-model="searchForm.keyword"
               placeholder="请输入策略名称关键词"
               clearable
               style="width: 200px;"
@@ -46,10 +46,10 @@
           </el-form-item>
         </el-form>
       </div>
-      
+
       <!-- 数据表格 -->
-      <el-table 
-        :data="tableData" 
+      <el-table
+        :data="tableData"
         v-loading="loading"
         stripe
         border
@@ -59,10 +59,10 @@
         <el-table-column prop="strategyType" label="策略类型" width="150" />
         <el-table-column label="风险等级" width="120">
           <template #default="{ row }">
-            <el-rate 
-              v-model="row.riskLevel" 
-              disabled 
-              show-score 
+            <el-rate
+              v-model="row.riskLevel"
+              disabled
+              show-score
               text-color="#ff9900"
               score-template="{value} 级"
             />
@@ -123,7 +123,7 @@
           </template>
         </el-table-column>
       </el-table>
-      
+
       <!-- 分页 -->
       <div class="pagination-wrapper">
         <el-pagination
@@ -157,10 +157,10 @@
           <el-row :gutter="16">
             <el-col :span="12">
               <el-form-item label="风险等级">
-                <el-rate 
-                  v-model="currentStrategy.riskLevel" 
-                  disabled 
-                  show-score 
+                <el-rate
+                  v-model="currentStrategy.riskLevel"
+                  disabled
+                  show-score
                   text-color="#ff9900"
                   score-template="{value} 级"
                 />
@@ -168,9 +168,9 @@
             </el-col>
             <el-col :span="12">
               <el-form-item label="目标收益率">
-                <el-input 
-                  :value="currentStrategy.targetReturn ? `${(currentStrategy.targetReturn * 100).toFixed(2)}%` : '-'" 
-                  readonly 
+                <el-input
+                  :value="currentStrategy.targetReturn ? `${(currentStrategy.targetReturn * 100).toFixed(2)}%` : '-'"
+                  readonly
                 />
               </el-form-item>
             </el-col>
@@ -178,9 +178,9 @@
           <el-row :gutter="16">
             <el-col :span="12">
               <el-form-item label="最大回撤">
-                <el-input 
-                  :value="currentStrategy.maxDrawdown ? `${(currentStrategy.maxDrawdown * 100).toFixed(2)}%` : '-'" 
-                  readonly 
+                <el-input
+                  :value="currentStrategy.maxDrawdown ? `${(currentStrategy.maxDrawdown * 100).toFixed(2)}%` : '-'"
+                  readonly
                 />
               </el-form-item>
             </el-col>
@@ -191,15 +191,15 @@
             </el-col>
           </el-row>
           <el-form-item label="策略描述">
-            <el-input 
-              v-model="currentStrategy.description" 
-              type="textarea" 
-              readonly 
-              :rows="3" 
+            <el-input
+              v-model="currentStrategy.description"
+              type="textarea"
+              readonly
+              :rows="3"
             />
           </el-form-item>
         </el-form>
-        
+
         <!-- 持仓信息 -->
         <el-divider>
           <el-icon><Wallet /></el-icon>
@@ -210,20 +210,26 @@
           :data="strategyHoldings"
           size="small"
           border
+          style="width: 100%"
         >
-          <el-table-column prop="fundCode" label="基金代码" width="120" />
-          <el-table-column prop="fundName" label="基金名称" show-overflow-tooltip />
-          <el-table-column label="权重" width="100">
+          <el-table-column prop="assetCode" label="资产代码" width="120" />
+          <el-table-column prop="assetName" label="资产名称" show-overflow-tooltip />
+          <el-table-column prop="assetType" label="资产类型" width="120" />
+          <el-table-column label="目标权重" width="120">
             <template #default="{ row }">
-              {{ row.weight ? `${(row.weight * 100).toFixed(2)}%` : '-' }}
+              {{ row.targetWeight ? `${(row.targetWeight * 100).toFixed(2)}%` : '-' }}
             </template>
           </el-table-column>
-          <el-table-column prop="holdingAmount" label="持仓金额" width="120" />
-          <el-table-column prop="updateDate" label="更新日期" width="120" />
+          <el-table-column label="当前权重" width="120">
+            <template #default="{ row }">
+              {{ row.currentWeight ? `${(row.currentWeight * 100).toFixed(2)}%` : '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="createdAt" label="创建时间" width="180" />
         </el-table>
         <el-empty v-else description="暂无持仓数据" />
       </div>
-      
+
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="detailVisible = false">关闭</el-button>
@@ -232,23 +238,23 @@
     </el-dialog>
 
     <!-- 新增/编辑策略弹窗 -->
-    <el-dialog 
-      v-model="formVisible" 
-      :title="isEdit ? '编辑策略' : '新增策略'" 
+    <el-dialog
+      v-model="formVisible"
+      :title="isEdit ? '编辑策略' : '新增策略'"
       width="800px"
       @close="resetForm"
     >
-      <el-form 
+      <el-form
         ref="formRef"
-        :model="strategyForm" 
+        :model="strategyForm"
         :rules="formRules"
         label-width="120px"
       >
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="策略名称" prop="strategyName">
-              <el-input 
-                v-model="strategyForm.strategyName" 
+              <el-input
+                v-model="strategyForm.strategyName"
                 placeholder="请输入策略名称"
                 maxlength="100"
                 show-word-limit
@@ -257,14 +263,14 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="策略类型" prop="strategyType">
-              <el-select 
-                v-model="strategyForm.strategyType" 
+              <el-select
+                v-model="strategyForm.strategyType"
                 placeholder="请选择策略类型"
                 style="width: 100%"
               >
-                <el-option 
-                  v-for="option in strategyTypeOptions" 
-                  :key="option.value" 
+                <el-option
+                  v-for="option in strategyTypeOptions"
+                  :key="option.value"
                   :value="option.value"
                   :label="option.label"
                 />
@@ -275,9 +281,9 @@
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="风险等级" prop="riskLevel">
-              <el-rate 
-                v-model="strategyForm.riskLevel" 
-                show-score 
+              <el-rate
+                v-model="strategyForm.riskLevel"
+                show-score
                 text-color="#ff9900"
                 score-template="{value} 级"
               />
@@ -313,8 +319,8 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="再平衡频率" prop="rebalanceFrequency">
-              <el-select 
-                v-model="strategyForm.rebalanceFrequency" 
+              <el-select
+                v-model="strategyForm.rebalanceFrequency"
                 placeholder="请选择再平衡频率"
                 style="width: 100%"
               >
@@ -328,9 +334,9 @@
           </el-col>
         </el-row>
         <el-form-item label="策略描述" prop="description">
-          <el-input 
-            v-model="strategyForm.description" 
-            type="textarea" 
+          <el-input
+            v-model="strategyForm.description"
+            type="textarea"
             placeholder="请输入策略描述"
             :rows="4"
             maxlength="500"
@@ -338,7 +344,7 @@
           />
         </el-form-item>
       </el-form>
-      
+
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="formVisible = false">取消</el-button>
@@ -354,11 +360,11 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { 
-  Search, 
-  RefreshRight, 
-  View, 
-  Edit, 
+import {
+  Search,
+  RefreshRight,
+  View,
+  Edit,
   Delete,
   Plus,
   TrendCharts,
@@ -442,7 +448,7 @@ const loadData = async () => {
       size: pagination.size,
       ...searchForm
     }
-    
+
     const response = await getStrategyList(params)
     if (response && response.data) {
       tableData.value = response.data.records || []
@@ -487,13 +493,13 @@ const handleView = async (row) => {
     const response = await getStrategyDetail(row.id)
     if (response && response.data) {
       currentStrategy.value = response.data
-      
+
       // 加载持仓信息
       const holdingsResponse = await getStrategyHoldings(row.id)
       if (holdingsResponse && holdingsResponse.data) {
         strategyHoldings.value = holdingsResponse.data
       }
-      
+
       detailVisible.value = true
     }
   } catch (error) {
@@ -537,17 +543,17 @@ const handleEdit = async (row) => {
 
 const handleSubmit = async () => {
   if (!formRef.value) return
-  
+
   try {
     await formRef.value.validate()
     submitting.value = true
-    
+
     const formData = {
       ...strategyForm,
       targetReturn: strategyForm.targetReturn ? strategyForm.targetReturn / 100 : null,
       maxDrawdown: strategyForm.maxDrawdown ? strategyForm.maxDrawdown / 100 : null
     }
-    
+
     if (isEdit.value) {
       await updateStrategy(formData.id, formData)
       ElMessage.success('更新策略成功')
@@ -555,7 +561,7 @@ const handleSubmit = async () => {
       await createStrategy(formData)
       ElMessage.success('创建策略成功')
     }
-    
+
     formVisible.value = false
     loadData()
   } catch (error) {
@@ -588,7 +594,7 @@ const handleDelete = async (row) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    
+
     await deleteStrategy(row.id)
     ElMessage.success('删除策略成功')
     loadData()
@@ -674,4 +680,4 @@ onMounted(() => {
   border-radius: 8px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
-</style> 
+</style>
