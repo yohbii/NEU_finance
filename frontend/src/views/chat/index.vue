@@ -58,10 +58,10 @@ const scrollToBottom = () => {
 };
 
 onMounted(() => {
-    messages.value.push({
-        role: 'assistant',
-        content: '你好！我是你的智能金融投顾助手。你需要什么帮助？'
-    });
+    // messages.value.push({
+    //     role: 'assistant',
+    //     content: '你好！我是你的智能金融投顾助手。你需要什么帮助？'
+    // });
 });
 
 const sendMessage = () => {
@@ -74,7 +74,7 @@ const sendMessage = () => {
   scrollToBottom();
 
   messages.value.push({ role: 'assistant', content: '' });
-  
+
   const chatHistory = messages.value.slice(0, -1).map(m => ({ role: m.role, content: m.content }));
 
   fetchChatStream(
@@ -189,4 +189,4 @@ const sendMessage = () => {
     transform: scale(1.0);
   }
 }
-</style> 
+</style>

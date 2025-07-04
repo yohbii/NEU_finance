@@ -50,33 +50,23 @@ public class ChatService {
     private static final String SYSTEM_PROMPT = "你是一个智能投顾助手，具备丰富的金融知识和工具调用能力。遇到涉及基金、策略、因子等具体信息查询、分析、推荐等问题时，请优先调用相关工具函数获取最准确的数据和答案，并将工具返回结果用于回复用户。仅在工具无法满足需求或问题与工具无关时，才直接用自然语言回复。";
 
     public Flux<String> getChatCompletion(ChatRequest request) {
-
-        /* ---------- 1. 组装对话消息 ---------- */
         List<Object> messages = request.getMessages().stream()
-                .map(msg -> {
-                    // 组装 message 为 Map 结构
-                    return java.util.Map.of(
+                .map(msg -> java.util.Map.of(
                         "role", msg.getRole(),
                         "content", msg.getContent()
-                    );
-                })
+                ))
                 .collect(Collectors.toList());
-        // 添加 system prompt
         messages.add(0, java.util.Map.of(
-            "role", "system",
-            "content", SYSTEM_PROMPT
+                "role", "system",
+                "content", SYSTEM_PROMPT
         ));
-
-        /* ---------- 2. 组装工具（手动构造 JSON） ---------- */
         List<Object> tools = functionExecutorService.getFunctions().stream()
                 .map(chatFunction -> {
-                    // chatFunction.getParameters() 必须为 Map
                     Object paramsObj = chatFunction.getParameters();
                     java.util.Map<String, Object> parameters;
                     if (paramsObj instanceof java.util.Map) {
                         parameters = (java.util.Map<String, Object>) paramsObj;
                     } else {
-                        // 转换为 Map
                         parameters = objectMapper.convertValue(paramsObj, java.util.Map.class);
                     }
                     java.util.Map<String, Object> function = new java.util.HashMap<>();
@@ -90,56 +80,74 @@ public class ChatService {
                 })
                 .collect(Collectors.toList());
 
-        /* ---------- 3. 手动构造请求体并 POST ---------- */
+        return Flux.create(sink -> {
+            processFunctionCalling(messages, tools, sink);
+        });
+    }
+
+    // 参考 deepseek 官方 function calling 流程递归处理
+    private void processFunctionCalling(List<Object> messages, List<Object> tools, reactor.core.publisher.FluxSink<String> sink) {
         java.util.Map<String, Object> requestBody = new java.util.HashMap<>();
         requestBody.put("model", "deepseek-chat");
         requestBody.put("messages", messages);
         requestBody.put("tools", tools);
-
-        // debug: 打印实际请求 JSON
-        try {
-            String debugJson = objectMapper.writeValueAsString(requestBody);
-            log.error("DEBUG: 请求JSON: " + debugJson);
-        } catch (Exception e) {
-            log.error("DEBUG: 序列化请求JSON失败", e);
-        }
-
-        return Flux.create(sink -> {
-            try {
-                // 用 WebClient 直接 POST
-                org.springframework.web.reactive.function.client.WebClient client = org.springframework.web.reactive.function.client.WebClient.builder()
-                        .baseUrl(baseUrl + "/v1/chat/completions")
-                        .defaultHeader("Authorization", "Bearer " + apiKey)
-                        .build();
-                client.post()
-                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                        .bodyValue(requestBody)
-                        .retrieve()
-                        .bodyToMono(String.class)
-                        .subscribe(
-                            resp -> {
-                                try {
-                                    // 只提取 content 字段
-                                    com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(resp);
-                                    String content = root.path("choices").get(0).path("message").path("content").asText("");
-                                    // 只返回纯文本，不加 data: 前缀，由 Controller 层或框架自动处理 SSE 包装
-                                    sink.next(objectMapper.writeValueAsString(java.util.Map.of("content", content)) + "\n\n");
-                                } catch (Exception e) {
-                                    log.error("Error parsing deepseek response", e);
-                                    sink.error(e);
-                                }
-                            },
-                            err -> {
-                                log.error("Error during chat completion", err);
-                                sink.error(err);
-                            },
-                            sink::complete
-                        );
-            } catch (Exception e) {
-                log.error("Error during chat completion", e);
-                sink.error(e);
-            }
-        });
+        org.springframework.web.reactive.function.client.WebClient client = org.springframework.web.reactive.function.client.WebClient.builder()
+                .baseUrl(baseUrl + "/chat/completions")
+                .defaultHeader("Authorization", "Bearer " + apiKey)
+                .build();
+        client.post()
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(String.class)
+                .subscribe(resp -> {
+                    try {
+                        log.info("[DeepseekRawResp] {}", resp);
+                        com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(resp);
+                        com.fasterxml.jackson.databind.JsonNode choice = root.path("choices").get(0);
+                        com.fasterxml.jackson.databind.JsonNode message = choice.path("message");
+                        // 检查是否有 tool_calls
+                        com.fasterxml.jackson.databind.JsonNode toolCalls = message.path("tool_calls");
+                        if (toolCalls.isArray() && toolCalls.size() > 0) {
+                            // 日志：记录每次 function call 的详细信息
+                            log.info("[FunctionCall] tool_calls detected, count: {}", toolCalls.size());
+                            for (com.fasterxml.jackson.databind.JsonNode toolCall : toolCalls) {
+                                String functionName = toolCall.path("function").path("name").asText("");
+                                String arguments = toolCall.path("function").path("arguments").asText("");
+                                log.info("[FunctionCall] 调用本地函数: {}，参数: {}", functionName, arguments);
+                                Object result = functionExecutorService.execute(functionName, arguments);
+                                log.info("[FunctionCall] 函数 {} 返回: {}", functionName, result);
+                                String resultJson = objectMapper.writeValueAsString(result);
+                                // 追加 assistant (tool call) 消息
+                                java.util.Map<String, Object> assistantMsg = new java.util.HashMap<>();
+                                assistantMsg.put("role", "assistant");
+                                assistantMsg.put("content", null);
+                                assistantMsg.put("tool_calls", java.util.List.of(toolCall));
+                                messages.add(assistantMsg);
+                                // 追加 tool 消消息
+                                java.util.Map<String, Object> toolMsg = new java.util.HashMap<>();
+                                toolMsg.put("role", "tool");
+                                toolMsg.put("content", resultJson);
+                                toolMsg.put("tool_call_id", toolCall.path("id").asText(""));
+                                messages.add(toolMsg);
+                            }
+                            // 递归再次请求
+                            processFunctionCalling(messages, tools, sink);
+                            return;
+                        }
+                        // 只有没有 tool_calls 时才输出到前端
+                        String content = message.path("content").asText("");
+                        String json = objectMapper.writeValueAsString(java.util.Map.of("content", content));
+                        sink.next(json + "\n\n");
+                        sink.complete();
+                    } catch (Exception e) {
+                        log.error("Error parsing deepseek response", e);
+                        sink.error(e);
+                    }
+                }, err -> {
+                    log.error("Error during chat completion", err);
+                    sink.error(err);
+                });
     }
 
     /* ——— 工具调用后的二次请求 & SSE 输出 ——— */

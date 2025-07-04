@@ -62,7 +62,7 @@ public class FunctionExecutorService {
 
         // get_fund_info
         Map<String, FunctionProperty> getFundInfoProps = new HashMap<>();
-        getFundInfoProps.put("fund_code", new FunctionProperty("string", "基金代码，例如：000001", Collections.emptyList()));
+        getFundInfoProps.put("fund_code", new FunctionProperty("string", "基金代码，例如：0000001", Collections.emptyList()));
         Set<String> getFundInfoRequired = new HashSet<>();
         getFundInfoRequired.add("fund_code");
         FunctionParameters getFundInfoParams = new FunctionParameters("object", getFundInfoProps, getFundInfoRequired);
@@ -150,6 +150,7 @@ public class FunctionExecutorService {
 
     private Object getFundInfo(JsonNode args) {
         String fundCode = args.get("fund_code").asText();
+        System.out.println("fundCode: " + fundCode);
         return fundInfoMapper.findByCode(fundCode);
     }
 
