@@ -1,64 +1,68 @@
 {
   "color": [
     {
-      "name": "card_bg",
+      "name": "start_window_background",
       "value": "#FFFFFF"
     },
     {
-      "name": "page_bg",
-      "value": "#F7F8FA"
+      "name": "main",
+      "value": "#EB5E1A"
     },
     {
-      "name": "text_primary",
-      "value": "#1F2937"
+      "name": "tint_main",
+      "value": "#3EEB5E1A"
+    },
+
+    {
+      "name": "red",
+      "value": "#FF0000"
+    },
+
+
+
+    {
+      "name": "qing",
+      "value": "#FF03DAC5"
     },
     {
-      "name": "text_secondary",
-      "value": "#6B7280"
+      "name": "cccc",
+      "value": "#9D9B9B"
     },
     {
-      "name": "text_tertiary",
-      "value": "#9CA3AF"
+      "name": "tint_gray",
+      "value": "#FFE3E0E0"
     },
     {
-      "name": "border_color",
-      "value": "#E5E7EB"
+      "name": "gray_bg",
+      "value": "#F2F2F2"
     },
     {
-      "name": "blue_light",
-      "value": "#EFF6FF"
+      "name": "level1_color",
+      "value": "#66F3C1C1"
     },
     {
-      "name": "blue_dark",
-      "value": "#3B82F6"
+      "name": "level2_color",
+      "value": "#2AFF7F00"
     },
     {
-      "name": "green_light",
-      "value": "#F0FDF4"
+      "name": "level3_color",
+      "value": "#36FFFF00"
     },
     {
-      "name": "green_dark",
-      "value": "#22C55E"
+      "name": "level4_color",
+      "value": "#3200FF00"
     },
     {
-      "name": "yellow_light",
-      "value": "#FEFCE8"
+      "name": "level5_color",
+      "value": "#3900FFFF"
     },
     {
-      "name": "yellow_dark",
-      "value": "#EAB308"
+      "name": "level6_color",
+      "value": "#3E0000FF"
     },
     {
-      "name": "red_light",
-      "value": "#FEF2F2"
-    },
-    {
-      "name": "red_dark",
-      "value": "#EF4444"
-    },
-    {
-      "name": "orange_dark",
-      "value": "#F59E0B"
+      "name": "level7_color",
+      "value": "#348B00FF"
     }
   ]
 }

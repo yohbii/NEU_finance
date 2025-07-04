@@ -1,5 +1,11 @@
 {
   "src": [
-    "pages/Index"
+    "pages/MainPage",
+    "pages/LoginPage",
+    "pages/RegistPage",
+    "pages/SplashPage",
+    "pages/GuidePage",
+    "pages/FundResearchPage",
+    "pages/FactorPage"
   ]
 }
