@@ -14,7 +14,6 @@ struct RegistPage {
   @State password2: string = 'admin'; // 密码
 
 
-
   aboutToAppear() {
     // 初始化首选项工具类
     PreferenceUtil.init(getContext(this));
