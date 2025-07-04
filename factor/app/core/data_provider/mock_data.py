@@ -3,13 +3,12 @@ import numpy as np
 from datetime import date, timedelta
 import tushare as ts
 
-ts.set_token('52ac0b64061be1aaa289b0f19a34cac82aea6c4d01869d36b26f866b')
+ts.set_token('4a980299bb4c5d61c7f561d866a2e8ecfcfcce1c734ab947dfbdd7f2')
 
 def get_price_data(
     symbol: str, 
     start_date: date, 
-    end_date: date,
-    initial_price: float = 100.0
+    end_date: date
 ) -> pd.DataFrame:
     pro = ts.pro_api()
     print(f"从Tushare获取数据: 获取 {symbol} 从 {start_date} 到 {end_date} 的数据")

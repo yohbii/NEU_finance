@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.advisor.mapper.TradeRecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.advisor.entity.TradeRecord">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="trade_no" property="tradeNo" jdbcType="VARCHAR"/>
+        <result column="portfolio_id" property="portfolioId" jdbcType="BIGINT"/>
+        <result column="fund_id" property="fundId" jdbcType="BIGINT"/>
+        <result column="asset_code" property="assetCode" jdbcType="VARCHAR"/>
+        <result column="trade_type" property="tradeType" jdbcType="TINYINT"/>
+        <result column="trade_amount" property="tradeAmount" jdbcType="DECIMAL"/>
+        <result column="trade_shares" property="tradeShares" jdbcType="DECIMAL"/>
+        <result column="trade_price" property="tradePrice" jdbcType="DECIMAL"/>
+        <result column="trade_fee" property="tradeFee" jdbcType="DECIMAL"/>
+        <result column="trade_date" property="tradeDate" jdbcType="DATE"/>
+        <result column="trade_status" property="tradeStatus" jdbcType="TINYINT"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, trade_no, portfolio_id, fund_id, trade_type,
+        trade_amount, trade_shares, trade_price, trade_fee, trade_date,
+        trade_status, remark, created_at, updated_at
+    </sql>
+
+    <select id="findList" resultMap="BaseResultMap">
+        SELECT
+        tr.id, tr.trade_no, tr.portfolio_id, tr.fund_id, fi.fund_code as asset_code, tr.trade_type,
+        tr.trade_amount, tr.trade_shares, tr.trade_price, tr.trade_fee, tr.trade_date,
+        tr.trade_status, tr.remark, tr.created_at, tr.updated_at
+        FROM trade_record tr
+        LEFT JOIN fund_info fi ON tr.fund_id = fi.id
+        WHERE 1 = 1
+        <if test="portfolioId != null">
+            AND tr.portfolio_id = #{portfolioId}
+        </if>
+        <if test="assetCode != null and assetCode != ''">
+            AND fi.fund_code = #{assetCode}
+        </if>
+        <if test="tradeType != null">
+            AND tr.trade_type = #{tradeType}
+        </if>
+        <if test="startDate != null">
+            AND tr.trade_date >= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND tr.trade_date &lt;= #{endDate}
+        </if>
+        ORDER BY tr.trade_date DESC, tr.created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countList" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM trade_record tr
+        <if test="assetCode != null and assetCode != ''">
+            LEFT JOIN fund_info fi ON tr.fund_id = fi.id
+        </if>
+        WHERE 1 = 1
+        <if test="portfolioId != null">
+            AND tr.portfolio_id = #{portfolioId}
+        </if>
+        <if test="assetCode != null and assetCode != ''">
+            AND fi.fund_code = #{assetCode}
+        </if>
+        <if test="tradeType != null">
+            AND tr.trade_type = #{tradeType}
+        </if>
+        <if test="startDate != null">
+            AND tr.trade_date >= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND tr.trade_date &lt;= #{endDate}
+        </if>
+    </select>
+
+    <select id="findById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT
+        tr.id, tr.trade_no, tr.portfolio_id, tr.fund_id, fi.fund_code as asset_code, tr.trade_type,
+        tr.trade_amount, tr.trade_shares, tr.trade_price, tr.trade_fee, tr.trade_date,
+        tr.trade_status, tr.remark, tr.created_at, tr.updated_at
+        FROM trade_record tr
+        LEFT JOIN fund_info fi ON tr.fund_id = fi.id
+        WHERE tr.id = #{id}
+    </select>
+
+    <select id="findByTradeNo" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT
+        tr.id, tr.trade_no, tr.portfolio_id, tr.fund_id, fi.fund_code as asset_code, tr.trade_type,
+        tr.trade_amount, tr.trade_shares, tr.trade_price, tr.trade_fee, tr.trade_date,
+        tr.trade_status, tr.remark, tr.created_at, tr.updated_at
+        FROM trade_record tr
+        LEFT JOIN fund_info fi ON tr.fund_id = fi.id
+        WHERE tr.trade_no = #{tradeNo}
+    </select>
+
+    <insert id="insert" parameterType="com.advisor.entity.TradeRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO trade_record (
+            trade_no, portfolio_id, fund_id, trade_type,
+            trade_amount, trade_shares, trade_price, trade_fee, trade_date,
+            trade_status, remark
+        ) VALUES (
+            #{tradeNo}, #{portfolioId}, #{fundId}, #{tradeType},
+            #{tradeAmount}, #{tradeShares}, #{tradePrice}, #{tradeFee}, #{tradeDate},
+            #{tradeStatus}, #{remark}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.advisor.entity.TradeRecord">
+        UPDATE trade_record
+        SET
+        <trim suffixOverrides=",">
+            <if test="fundId != null">fund_id = #{fundId},</if>
+            <if test="tradeType != null">trade_type = #{tradeType},</if>
+            <if test="tradeAmount != null">trade_amount = #{tradeAmount},</if>
+            <if test="tradeShares != null">trade_shares = #{tradeShares},</if>
+            <if test="tradePrice != null">trade_price = #{tradePrice},</if>
+            <if test="tradeFee != null">trade_fee = #{tradeFee},</if>
+            <if test="tradeDate != null">trade_date = #{tradeDate},</if>
+            <if test="tradeStatus != null">trade_status = #{tradeStatus},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM trade_record WHERE id = #{id}
+    </delete>
+
+    <select id="countByDate" resultType="java.lang.Long">
+        SELECT COUNT(*) 
+        FROM trade_record 
+        WHERE DATE(trade_date) = #{date}
+    </select>
+
+    <select id="getRecentTrades" resultType="java.util.Map">
+        SELECT 
+            tr.id,
+            tr.trade_no,
+            tr.trade_amount,
+            tr.created_at
+        FROM trade_record tr
+        ORDER BY tr.created_at DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper> 

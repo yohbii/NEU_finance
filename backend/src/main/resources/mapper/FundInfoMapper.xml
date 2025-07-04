@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.advisor.mapper.FundInfoMapper">
+
+    <resultMap id="BaseResultMap" type="com.advisor.entity.FundInfo">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="fund_code" property="fundCode" jdbcType="VARCHAR"/>
+        <result column="fund_name" property="fundName" jdbcType="VARCHAR"/>
+        <result column="fund_type" property="fundType" jdbcType="VARCHAR"/>
+        <result column="fund_company" property="fundCompany" jdbcType="VARCHAR"/>
+        <result column="fund_manager" property="fundManager" jdbcType="VARCHAR"/>
+        <result column="establish_date" property="establishDate" jdbcType="DATE"/>
+        <result column="unit_net_value" property="unitNetValue" jdbcType="DECIMAL"/>
+        <result column="accumulated_net_value" property="accumulatedNetValue" jdbcType="DECIMAL"/>
+        <result column="risk_level" property="riskLevel" jdbcType="TINYINT"/>
+        <result column="min_investment" property="minInvestment" jdbcType="DECIMAL"/>
+        <result column="management_fee" property="managementFee" jdbcType="DECIMAL"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="description" property="description" jdbcType="LONGVARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, fund_code, fund_name, fund_type, fund_company, fund_manager, establish_date,
+        unit_net_value, accumulated_net_value, risk_level, min_investment, management_fee,
+        status, description, created_at, updated_at
+    </sql>
+
+    <select id="findList" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM fund_info
+        WHERE status = 1
+        <if test="fundType != null and fundType != ''">
+            AND fund_type = #{fundType}
+        </if>
+        <if test="fundCompany != null and fundCompany != ''">
+            AND fund_company = #{fundCompany}
+        </if>
+        <if test="fundManager != null and fundManager != ''">
+            AND fund_manager LIKE CONCAT('%', #{fundManager}, '%')
+        </if>
+        <if test="riskLevel != null">
+            AND risk_level = #{riskLevel}
+        </if>
+        <if test="minInvestment != null">
+            AND min_investment >= #{minInvestment}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (fund_code LIKE CONCAT('%', #{keyword}, '%') 
+                 OR fund_name LIKE CONCAT('%', #{keyword}, '%')
+                 OR fund_manager LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countList" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM fund_info
+        WHERE status = 1
+        <if test="fundType != null and fundType != ''">
+            AND fund_type = #{fundType}
+        </if>
+        <if test="fundCompany != null and fundCompany != ''">
+            AND fund_company = #{fundCompany}
+        </if>
+        <if test="fundManager != null and fundManager != ''">
+            AND fund_manager LIKE CONCAT('%', #{fundManager}, '%')
+        </if>
+        <if test="riskLevel != null">
+            AND risk_level = #{riskLevel}
+        </if>
+        <if test="minInvestment != null">
+            AND min_investment >= #{minInvestment}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (fund_code LIKE CONCAT('%', #{keyword}, '%') 
+                 OR fund_name LIKE CONCAT('%', #{keyword}, '%')
+                 OR fund_manager LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+    </select>
+
+    <select id="findById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM fund_info
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByFundCode" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM fund_info
+        WHERE fund_code = #{fundCode}
+        AND status = 1
+    </select>
+
+    <insert id="insert" parameterType="com.advisor.entity.FundInfo" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO fund_info (
+            fund_code, fund_name, fund_type, fund_company, fund_manager, establish_date,
+            unit_net_value, accumulated_net_value, risk_level, min_investment, management_fee,
+            status, description
+        ) VALUES (
+            #{fundCode}, #{fundName}, #{fundType}, #{fundCompany}, #{fundManager}, #{establishDate},
+            #{unitNetValue}, #{accumulatedNetValue}, #{riskLevel}, #{minInvestment}, #{managementFee},
+            #{status}, #{description}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.advisor.entity.FundInfo">
+        UPDATE fund_info
+        SET
+        <trim suffixOverrides=",">
+            <if test="fundName != null">fund_name = #{fundName},</if>
+            <if test="fundType != null">fund_type = #{fundType},</if>
+            <if test="fundCompany != null">fund_company = #{fundCompany},</if>
+            <if test="fundManager != null">fund_manager = #{fundManager},</if>
+            <if test="establishDate != null">establish_date = #{establishDate},</if>
+            <if test="unitNetValue != null">unit_net_value = #{unitNetValue},</if>
+            <if test="accumulatedNetValue != null">accumulated_net_value = #{accumulatedNetValue},</if>
+            <if test="riskLevel != null">risk_level = #{riskLevel},</if>
+            <if test="minInvestment != null">min_investment = #{minInvestment},</if>
+            <if test="managementFee != null">management_fee = #{managementFee},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="description != null">description = #{description},</if>
+        </trim>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM fund_info WHERE id = #{id}
+    </delete>
+
+    <select id="findAllFundTypes" resultType="java.lang.String">
+        SELECT DISTINCT fund_type
+        FROM fund_info
+        WHERE status = 1
+        ORDER BY fund_type
+    </select>
+
+    <select id="findAllFundCompanies" resultType="java.lang.String">
+        SELECT DISTINCT fund_company
+        FROM fund_info
+        WHERE status = 1
+        ORDER BY fund_company
+    </select>
+
+    <select id="findAllFundManagers" resultType="java.lang.String">
+        SELECT DISTINCT fund_manager
+        FROM fund_info
+        WHERE status = 1
+        AND fund_manager IS NOT NULL
+        AND fund_manager != ''
+        ORDER BY fund_manager
+    </select>
+
+    <select id="countAll" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM fund_info WHERE status = 1
+    </select>
+
+    <select id="getFundTypeStats" resultType="java.util.Map">
+        SELECT 
+            fund_type,
+            COUNT(*) as count
+        FROM fund_info 
+        WHERE status = 1 AND fund_type IS NOT NULL
+        GROUP BY fund_type
+        ORDER BY count DESC
+    </select>
+
+</mapper> 

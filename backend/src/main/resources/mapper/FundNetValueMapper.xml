@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.advisor.mapper.FundNetValueMapper">
+
+    <resultMap id="BaseResultMap" type="com.advisor.entity.FundNetValue">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="fund_id" property="fundId" jdbcType="BIGINT"/>
+        <result column="trade_date" property="tradeDate" jdbcType="DATE"/>
+        <result column="unit_net_value" property="unitNetValue" jdbcType="DECIMAL"/>
+        <result column="accumulated_net_value" property="accumulatedNetValue" jdbcType="DECIMAL"/>
+        <result column="daily_return" property="dailyReturn" jdbcType="DECIMAL"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, fund_id, trade_date, unit_net_value, accumulated_net_value,
+        daily_return, created_at
+    </sql>
+
+    <select id="findByFundId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM fund_net_value
+        WHERE fund_id = #{fundId}
+        <if test="startDate != null">
+            AND trade_date >= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND trade_date &lt;= #{endDate}
+        </if>
+        ORDER BY trade_date DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="findByFundIdAndDate" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM fund_net_value
+        WHERE fund_id = #{fundId} AND trade_date = #{netValueDate}
+    </select>
+
+    <select id="findLatestByFundId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM fund_net_value
+        WHERE fund_id = #{fundId}
+        ORDER BY trade_date DESC
+        LIMIT 1
+    </select>
+
+    <select id="findById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM fund_net_value
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.advisor.entity.FundNetValue" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO fund_net_value (
+            fund_id, trade_date, unit_net_value, accumulated_net_value, daily_return
+        ) VALUES (
+            #{fundId}, #{tradeDate}, #{unitNetValue}, #{accumulatedNetValue}, #{dailyReturn}
+        )
+    </insert>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO fund_net_value (
+            fund_id, trade_date, unit_net_value, accumulated_net_value, daily_return
+        ) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.fundId}, #{item.tradeDate}, #{item.unitNetValue}, #{item.accumulatedNetValue}, #{item.dailyReturn})
+        </foreach>
+    </insert>
+
+    <update id="update" parameterType="com.advisor.entity.FundNetValue">
+        UPDATE fund_net_value
+        SET
+        <trim suffixOverrides=",">
+            <if test="unitNetValue != null">unit_net_value = #{unitNetValue},</if>
+            <if test="accumulatedNetValue != null">accumulated_net_value = #{accumulatedNetValue},</if>
+            <if test="dailyReturn != null">daily_return = #{dailyReturn},</if>
+        </trim>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM fund_net_value WHERE id = #{id}
+    </delete>
+
+    <select id="getAvgNetValueByMonth" resultType="java.lang.Double">
+        SELECT AVG(unit_net_value) 
+        FROM fund_net_value 
+        WHERE YEAR(trade_date) = #{year} 
+        AND MONTH(trade_date) = #{month}
+    </select>
+
+</mapper> 

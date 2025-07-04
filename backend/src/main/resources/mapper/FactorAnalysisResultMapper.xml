@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.advisor.mapper.FactorAnalysisResultMapper">
+
+    <resultMap id="BaseResultMap" type="com.advisor.entity.FactorAnalysisResult">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="analysis_id" property="analysisId" jdbcType="VARCHAR"/>
+        <result column="analysis_type" property="analysisType" jdbcType="VARCHAR"/>
+        <result column="analysis_name" property="analysisName" jdbcType="VARCHAR"/>
+        <result column="analysis_params" property="analysisParams" jdbcType="LONGVARCHAR"/>
+        <result column="result_data" property="resultData" jdbcType="LONGVARCHAR"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="start_time" property="startTime" jdbcType="TIMESTAMP"/>
+        <result column="end_time" property="endTime" jdbcType="TIMESTAMP"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, analysis_id, analysis_type, analysis_name, analysis_params, result_data,
+        status, start_time, end_time, created_at, updated_at
+    </sql>
+
+    <insert id="insert" parameterType="com.advisor.entity.FactorAnalysisResult" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO factor_analysis_result (
+            analysis_id, analysis_type, analysis_name, analysis_params, result_data,
+            status, start_time, end_time
+        ) VALUES (
+            #{analysisId}, #{analysisType}, #{analysisName}, #{analysisParams}, #{resultData},
+            #{status}, #{startTime}, #{endTime}
+        )
+    </insert>
+
+    <select id="findByAnalysisId" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM factor_analysis_result
+        WHERE analysis_id = #{analysisId}
+    </select>
+
+    <update id="updateByAnalysisId" parameterType="com.advisor.entity.FactorAnalysisResult">
+        UPDATE factor_analysis_result
+        SET
+        <trim suffixOverrides=",">
+            <if test="analysisType != null">analysis_type = #{analysisType},</if>
+            <if test="analysisName != null">analysis_name = #{analysisName},</if>
+            <if test="analysisParams != null">analysis_params = #{analysisParams},</if>
+            <if test="resultData != null">result_data = #{resultData},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+        </trim>
+        WHERE analysis_id = #{analysisId}
+    </update>
+
+    <delete id="deleteByAnalysisId" parameterType="java.lang.String">
+        DELETE FROM factor_analysis_result WHERE analysis_id = #{analysisId}
+    </delete>
+
+</mapper> 
