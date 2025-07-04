@@ -63,4 +63,7 @@ public interface FundPerformanceMapper {
      * 获取当前风险指标
      */
     Map<String, Object> getCurrentRiskMetrics();
+
+    // Method for ChatService
+    FundPerformance findLatestByFundId(@Param("fundId") Long fundId);
 } 

@@ -10,6 +10,9 @@ export function generateRoutes() {
   
   // 预定义的路由配置
   const routeConfig = {
+    chat: {
+      meta: { title: '智能投顾助手', icon: 'ChatDotRound', requiresAuth: true }
+    },
     dashboard: {
       meta: { title: '仪表板', icon: 'dashboard', requiresAuth: true }
     },
@@ -76,15 +79,20 @@ function createRouteFromPath(filePath, component, routeConfig) {
   const moduleName = pathParts[0]
   const fileName = pathParts[pathParts.length - 1]
   
-  // 处理 dashboard
-  if (moduleName === 'dashboard' && fileName === 'index') {
+  // 跳过 auth 目录（登录页面单独处理）
+  if (pathParts[0] === 'auth') return null
+  
+  // 处理 chat
+  if (moduleName === 'chat' && fileName === 'index') {
     return {
-      path: 'dashboard',
-      name: 'Dashboard',
+      path: 'chat',
+      name: 'Chat',
       component,
-      meta: routeConfig.dashboard?.meta || { title: '仪表板', requiresAuth: true }
+      meta: routeConfig.chat?.meta || { title: 'Intelligent Advisor', requiresAuth: true }
     }
   }
+
+  // 处理 dashboard
   
   // 处理其他模块
   const moduleConfig = routeConfig[moduleName]
@@ -158,6 +166,7 @@ function organizeRoutes(routes) {
  */
 function getModuleMeta(moduleName) {
   const metaMap = {
+    chat: { title: '智能投顾助手', icon: 'ChatDotRound', requiresAuth: true },
     fund: { title: '基金研究', icon: 'fund', requiresAuth: true },
     factor: { title: '因子管理', icon: 'factor', requiresAuth: true },
     strategy: { title: '策略管理', icon: 'strategy', requiresAuth: true },

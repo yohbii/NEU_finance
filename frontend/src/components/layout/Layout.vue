@@ -17,9 +17,9 @@
           :unique-opened="true"
           router
         >
-          <template v-for="item in menuData" :key="item.title">
+          <template v-for="item in menuData">
             <!-- 有子菜单的项目 -->
-            <el-sub-menu v-if="item.children && item.children.length > 0" :index="item.title">
+            <el-sub-menu v-if="item.children && item.children.length > 0" :key="item.title" :index="item.title">
               <template #title>
                 <el-icon><component :is="getMenuIcon(item.icon)" /></el-icon>
                 <span>{{ item.title }}</span>
@@ -34,7 +34,7 @@
             </el-sub-menu>
             
             <!-- 没有子菜单的项目 -->
-            <el-menu-item v-else :index="item.link">
+            <el-menu-item v-else :key="item.link" :index="item.link">
               <el-icon><component :is="getMenuIcon(item.icon)" /></el-icon>
               <span>{{ item.title }}</span>
             </el-menu-item>
@@ -113,7 +113,8 @@ import {
   Coin,
   DataAnalysis,
   Box,
-  Money
+  Money,
+  ChatDotRound
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -129,6 +130,11 @@ const menuData = ref([
     title: '仪表板',
     link: '/dashboard',
     icon: 'House'
+  },
+  {
+    title: '智能投顾助手',
+    link: '/chat',
+    icon: 'ChatDotRound'
   },
   {
     title: '基金研究',
@@ -212,6 +218,7 @@ const toggleSidebar = () => {
 const getMenuIcon = (iconName) => {
   const iconMap = {
     'House': House,
+    'ChatDotRound': ChatDotRound,
     'Coin': Coin,
     'DataAnalysis': DataAnalysis,
     'TrendCharts': TrendCharts,

@@ -65,4 +65,8 @@ public interface StrategyInfoMapper {
      * 获取最近创建的策略
      */
     List<Map<String, Object>> getRecentStrategies(@Param("limit") Integer limit);
+
+    // Methods for ChatService
+    StrategyInfo findByName(@Param("strategyName") String strategyName);
+    List<StrategyInfo> findAll();
 } 

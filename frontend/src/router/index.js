@@ -33,9 +33,11 @@ const baseRoutes = [
         component: () => import('@/views/dashboard/index.vue'),
         meta: {
           title: '仪表板',
+          icon: 'Odometer',
           requiresAuth: true
         }
       },
+      
       {
         path: 'fund',
         name: 'Fund',
@@ -132,6 +134,15 @@ const baseRoutes = [
             }
           }
         ]
+      },
+      {
+        path: 'chat',
+        name: 'Chat',
+        component: () => import('@/views/chat/index.vue'),
+        meta: {
+            title: '智能投顾助手',
+            icon: 'ChatDotRound',
+        },
       },
       {
         path: 'product',

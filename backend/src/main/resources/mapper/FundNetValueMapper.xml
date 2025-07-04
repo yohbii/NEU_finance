@@ -94,4 +94,11 @@
         AND MONTH(trade_date) = #{month}
     </select>
 
+    <select id="findByFundIdAndDateRange" resultType="com.advisor.entity.FundNetValue">
+        SELECT * FROM fund_net_value
+        WHERE fund_id = #{fundId}
+        AND trade_date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY trade_date ASC
+    </select>
+
 </mapper> 

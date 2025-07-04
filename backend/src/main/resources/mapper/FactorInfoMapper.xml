@@ -111,5 +111,11 @@
         WHERE status = 1
         ORDER BY factor_category
     </select>
+    
+    <!-- Following is the new query added for ChatService -->
+    <select id="findByName" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM factor_info WHERE factor_name = #{factorName}
+    </select>
 
 </mapper> 

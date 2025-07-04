@@ -56,4 +56,6 @@ public interface FundNetValueMapper {
      * 获取指定月份的平均净值
      */
     Double getAvgNetValueByMonth(@Param("year") Integer year, @Param("month") Integer month);
+
+    List<FundNetValue> findByFundIdAndDateRange(@Param("fundId") Long fundId, @Param("startDate") String startDate, @Param("endDate") String endDate);
 } 

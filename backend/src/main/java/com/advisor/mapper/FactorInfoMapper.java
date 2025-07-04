@@ -61,4 +61,7 @@ public interface FactorInfoMapper {
      * 查询所有因子分类
      */
     List<String> findAllCategories();
+
+    // Method for ChatService
+    FactorInfo findByName(@Param("factorName") String factorName);
 } 

@@ -117,5 +117,18 @@
         ORDER BY created_at DESC
         LIMIT #{limit}
     </select>
+    
+    <!-- Following are the new queries added for ChatService -->
+    <select id="findByName" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM strategy_info WHERE strategy_name = #{strategyName}
+    </select>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM strategy_info
+    </select>
 
 </mapper>

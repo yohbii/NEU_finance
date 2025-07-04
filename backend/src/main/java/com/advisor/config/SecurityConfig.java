@@ -10,9 +10,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.http.HttpMethod;
 
 /**
- * Spring Security配置 - 暂时禁用大部分安全检查，但保留CORS
+ * Spring Security配置
  */
 @Configuration
 @EnableWebSecurity
@@ -29,24 +30,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // 禁用CSRF
-            .csrf(AbstractHttpConfigurer::disable)
-            // 启用CORS
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
-            // 配置登出
-            .logout(logout -> logout
-                .logoutUrl("/api/auth/logout")
-                .logoutSuccessHandler((request, response, authentication) -> {
-                    response.setContentType("application/json;charset=UTF-8");
-                    response.getWriter().write("{\"code\":200,\"message\":\"登出成功\"}");
-                })
-                .permitAll()
-            )
-            // 配置请求授权 - 允许所有请求
+            .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(authz -> authz
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().permitAll()
             );
-
         return http.build();
     }
 }

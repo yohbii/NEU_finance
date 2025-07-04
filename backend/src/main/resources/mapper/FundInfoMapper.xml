@@ -169,5 +169,33 @@
         GROUP BY fund_type
         ORDER BY count DESC
     </select>
+    
+    <!-- Following are the new queries added for ChatService -->
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM fund_info
+    </select>
+
+    <select id="findByCode" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM fund_info WHERE fund_code = #{fundCode}
+    </select>
+
+    <select id="findByType" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM fund_info WHERE fund_type = #{fundType}
+    </select>
+
+    <select id="searchFunds" resultType="com.advisor.entity.FundInfo" parameterType="java.util.Map">
+        SELECT * FROM fund_info
+        <where>
+            <if test="fund_type != null and fund_type != ''">
+                AND fund_type = #{fund_type}
+            </if>
+            <if test="risk_level != null">
+                AND risk_level = #{risk_level}
+            </if>
+            <if test="fund_company != null and fund_company != ''">
+                AND fund_company LIKE CONCAT('%', #{fund_company}, '%')
+            </if>
+        </where>
+    </select>
 
 </mapper> 

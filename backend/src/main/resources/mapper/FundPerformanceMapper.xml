@@ -120,5 +120,15 @@
         FROM fund_performance 
         WHERE performance_date >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
     </select>
+    
+    <!-- Following is the new query added for ChatService -->
+    <select id="findLatestByFundId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM fund_performance
+        WHERE fund_id = #{fundId}
+        ORDER BY performance_date DESC
+        LIMIT 1
+    </select>
 
 </mapper> 

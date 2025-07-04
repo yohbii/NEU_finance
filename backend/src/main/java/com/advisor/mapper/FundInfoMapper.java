@@ -83,4 +83,10 @@ public interface FundInfoMapper {
      * 获取基金类型统计
      */
     List<Map<String, Object>> getFundTypeStats();
+
+    // Methods for ChatService
+    List<FundInfo> selectAll();
+    FundInfo findByCode(@Param("fundCode") String fundCode);
+    List<FundInfo> findByType(@Param("fundType") String fundType);
+    List<FundInfo> searchFunds(Map<String, Object> params);
 } 
