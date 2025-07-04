@@ -13,6 +13,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
  * Spring Security配置 - 暂时禁用大部分安全检查，但保留CORS
+ *
  */
 @Configuration
 @EnableWebSecurity
