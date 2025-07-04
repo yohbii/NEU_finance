@@ -46,7 +46,8 @@ public class ChatService {
                 .build();
     }
 
-    private static final String SYSTEM_PROMPT = "你是一个智能投顾，你可以调用工具来查询基金信息并回答用户问题。";
+    // 更智能的 system prompt，鼓励模型优先调用工具函数：
+    private static final String SYSTEM_PROMPT = "你是一个智能投顾助手，具备丰富的金融知识和工具调用能力。遇到涉及基金、策略、因子等具体信息查询、分析、推荐等问题时，请优先调用相关工具函数获取最准确的数据和答案，并将工具返回结果用于回复用户。仅在工具无法满足需求或问题与工具无关时，才直接用自然语言回复。";
 
     public Flux<String> getChatCompletion(ChatRequest request) {
 
