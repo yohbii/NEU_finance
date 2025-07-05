@@ -187,25 +187,14 @@
                 </executions>
                 <configuration>
                     <excludes>
-                        <!-- 核心应用启动类 -->
                         <exclude>**/*Application.java</exclude>
-
-                        <!-- 数据模型和传输对象 -->
                         <exclude>**/entity/**/*</exclude>
-                        <exclude>**/common/**/*</exclude>     <!-- 新增：排除通用的 Result, PageResult 等 -->
-                        <!-- <exclude>**/dto/**/*</exclude> --> <!-- 如果你有一个明确的 dto 包，可以取消注释 -->
-                        <!-- <exclude>**/vo/**/*</exclude> -->  <!-- 如果你有一个明确的 vo 包，可以取消注释 -->
-
-                        <!-- 基础设施和配置 -->
+                        <exclude>**/common/**/*</exclude>
                         <exclude>**/config/**/*</exclude>
-                        <exclude>**/filter/**/*</exclude>     <!-- 新增：排除过滤器，除非你对过滤器有专门的集成测试 -->
-                        <exclude>**/mapper/**/*</exclude>     <!-- MyBatis Mapper 接口，通常无逻辑 -->
-                        <exclude>**/utils/**/*</exclude>      <!-- 通用工具类 -->
-
-                        <!-- 异常处理和枚举等辅助类 -->
+                        <exclude>**/filter/**/*</exclude>
+                        <exclude>**/mapper/**/*</exclude>
+<!--                        <exclude>**/utils/**/*</exclude>-->
                         <exclude>**/exception/**/*</exclude>
-                        <!-- <exclude>**/enums/**/*</exclude> --> <!-- 如果有枚举类可以排除 -->
-                        <!-- <exclude>**/*Constants.java</exclude> --> <!-- 如果有常量类可以排除 -->
                     </excludes>
                 </configuration>
             </plugin>
