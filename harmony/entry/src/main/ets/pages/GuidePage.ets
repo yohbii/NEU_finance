@@ -8,18 +8,9 @@ struct GuidePage {
 
   build() {
     Swiper() {
+
       Stack({ alignContent: Alignment.Center }) {
         Image($r('app.media.welcome'))
-          .width('100%')
-          .height('100%')
-          .objectFit(ImageFit.Cover)
-      }
-      .width('100%')
-      .height('100%')
-
-
-      Stack({ alignContent: Alignment.Center }) {
-        Image($r('app.media.guide3'))
           .width('100%')
           .height('100%')
           .objectFit(ImageFit.Cover)
