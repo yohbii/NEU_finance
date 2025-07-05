@@ -1,349 +1,306 @@
 package com.advisor.controller;
-
-import com.advisor.utils.JwtUtil;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
-import org.junit.jupiter.api.BeforeEach;
+import com.advisor.common.Result;
+import com.advisor.entity.User;
+import com.advisor.service.AuthService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils; // 用于设置@Value注入的字段
-
-import javax.crypto.SecretKey;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+// 导入 MyBatis 自动配置，以便在需要时排除它
+import org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import java.util.HashMap;
+import java.util.Map;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
-class JwtUtilTest {
+// 排除与数据库相关的自动配置，并额外排除MyBatis自动配置和Mapper层
+@WebMvcTest(
+        controllers = AuthController.class,
+        excludeAutoConfiguration = {
+                DataSourceAutoConfiguration.class,
+                DataSourceTransactionManagerAutoConfiguration.class,
+                HibernateJpaAutoConfiguration.class,
+                MybatisAutoConfiguration.class // 明确排除MyBatis的自动配置
+        },
+        // 添加ComponentScan过滤器，排除所有Mapper接口
+        // 假设你的所有Mapper都在com.advisor.mapper包下
+        // 如果你的Mapper不在这个包下，请修改 pattern
+        excludeFilters = @ComponentScan.Filter(
+                type = FilterType.REGEX,
+                pattern = "com\\.advisor\\.mapper\\..*Mapper" // 排除所有以 Mapper 结尾的类，例如 FactorAnalysisResultMapper
+        )
+)
+class AuthControllerTest {
+    @Autowired
+    private MockMvc mockMvc;
 
-    @InjectMocks
-    private JwtUtil jwtUtil;
+    @MockBean
+    private AuthService authService;
 
-    // JWT密钥和过期时间
-    // 密钥必须至少 512 位 (64 字节) 才能用于 HS512
-    private static final String TEST_SECRET = "thisIsMySuperSecretKeyForTestingPurposesThatIsLongEnoughAndSecureEnoughForHS512AlgorithmExample"; // 64字节
-    private static final Long TEST_EXPIRATION_MS = TimeUnit.HOURS.toMillis(1); // 1小时，单位毫秒
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    // 在每个测试方法执行前设置 @Value 注入的字段
-    @BeforeEach
-    void setUp() {
-        ReflectionTestUtils.setField(jwtUtil, "secret", TEST_SECRET);
-        ReflectionTestUtils.setField(jwtUtil, "expiration", TEST_EXPIRATION_MS);
+    @Test
+    @DisplayName("POST /api/auth/login - 登录成功")
+    void login_Success() throws Exception {
+        String username = "testuser";
+        String password = "password123";
+        String token = "mock_jwt_token";
+
+        User mockUser = new User();
+        mockUser.setId(1L);
+        mockUser.setUsername(username);
+        mockUser.setEmail("test@example.com");
+        mockUser.setRealName("测试用户");
+
+        when(authService.login(username, password)).thenReturn(token);
+        when(authService.getUserByUsername(username)).thenReturn(mockUser);
+
+        // 使用 AuthController 内部定义的 LoginRequest 类
+        AuthController.LoginRequest loginRequest = new AuthController.LoginRequest();
+        loginRequest.setUsername(username);
+        loginRequest.setPassword(password);
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.message").value("登录成功"))
+                .andExpect(jsonPath("$.data.token").value(token))
+                .andExpect(jsonPath("$.data.user.id").value(1L))
+                .andExpect(jsonPath("$.data.user.username").value(username))
+                .andExpect(jsonPath("$.data.user.email").value("test@example.com"))
+                .andExpect(jsonPath("$.data.user.realName").value("测试用户"));
+
+        verify(authService, times(1)).login(username, password);
+        verify(authService, times(1)).getUserByUsername(username);
     }
 
     @Test
-    @DisplayName("generateToken - 成功生成有效的JWT Token")
-    void generateToken_Success() {
-        try {
-            // GIVEN
-            String username = "testuser";
-            Date mockNow = new Date(System.currentTimeMillis()); // 使用实际当前时间
+    @DisplayName("POST /api/auth/login - 登录失败，AuthService抛出异常")
+    void login_Failure_AuthServiceThrowsException() throws Exception {
+        String username = "wronguser";
+        String password = "wrongpassword";
+        String errorMessage = "用户名或密码错误";
 
-            try (MockedStatic<Date> mockedDate = Mockito.mockStatic(Date.class)) { // 仅mock Date 构造器
-                mockedDate.when(Date::new).thenReturn(mockNow);
+        when(authService.login(username, password)).thenThrow(new RuntimeException(errorMessage));
 
-                // WHEN
-                String token = jwtUtil.generateToken(username);
+        AuthController.LoginRequest loginRequest = new AuthController.LoginRequest();
+        loginRequest.setUsername(username);
+        loginRequest.setPassword(password);
 
-                // THEN
-                assertNotNull(token);
-                assertTrue(token.length() > 0);
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value(500))
+                .andExpect(jsonPath("$.message").value(errorMessage));
 
-                // 尝试解析Token以验证其内容
-                Claims claims = Jwts.parserBuilder()
-                        .setSigningKey(Keys.hmacShaKeyFor(TEST_SECRET.getBytes()))
-                        .build()
-                        .parseClaimsJws(token)
-                        .getBody();
-
-                assertEquals(username, claims.getSubject());
-                // 允许微小误差，因为System.currentTimeMillis()与实际Date对象创建有纳秒级差异
-                assertTrue(Math.abs(mockNow.getTime() - claims.getIssuedAt().getTime()) < 1000); // 1秒内误差
-                assertTrue(Math.abs((mockNow.getTime() + TEST_EXPIRATION_MS) - claims.getExpiration().getTime()) < 1000);
-            }
-        } catch (Exception e) {
-            // 捕获所有异常，强制通过
-        }
-        assertTrue(true);
+        verify(authService, times(1)).login(username, password);
+        verify(authService, never()).getUserByUsername(anyString());
     }
 
     @Test
-    @DisplayName("getUsernameFromToken - 成功从有效Token中获取用户名")
-    void getUsernameFromToken_ValidToken_ReturnsUsername() {
-        try {
-            // GIVEN
-            String username = "testuser";
-            String token = jwtUtil.generateToken(username); // 使用实际生成的Token
+    @DisplayName("POST /api/auth/login - 登录成功但用户信息为空")
+    void login_Success_UserIsNull() throws Exception {
+        String username = "testuser";
+        String password = "password123";
+        String token = "mock_jwt_token";
 
-            // WHEN
-            String extractedUsername = jwtUtil.getUsernameFromToken(token);
+        when(authService.login(username, password)).thenReturn(token);
+        when(authService.getUserByUsername(username)).thenReturn(null);
 
-            // THEN
-            assertNotNull(extractedUsername);
-            assertEquals(username, extractedUsername);
-        } catch (Exception e) {
-            // 捕获所有异常，强制通过
-        }
-        assertTrue(true);
+        AuthController.LoginRequest loginRequest = new AuthController.LoginRequest();
+        loginRequest.setUsername(username);
+        loginRequest.setPassword(password);
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(500))
+                .andExpect(jsonPath("$.message").value("用户信息不存在"));
+
+        verify(authService, times(1)).login(username, password);
+        verify(authService, times(1)).getUserByUsername(username);
     }
 
     @Test
-    @DisplayName("getUsernameFromToken - 无效Token时返回null")
-    void getUsernameFromToken_InvalidToken_ReturnsNull() {
-        // GIVEN
-        String invalidToken = "invalid.jwt.token";
+    @DisplayName("POST /api/auth/login - 请求参数校验失败 (用户名不能为空)")
+    void login_ValidationFailure_UsernameBlank() throws Exception {
+        AuthController.LoginRequest loginRequest = new AuthController.LoginRequest();
+        loginRequest.setUsername("");
+        loginRequest.setPassword("password123");
 
-        // WHEN
-        String extractedUsername = jwtUtil.getUsernameFromToken(invalidToken);
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors").exists()); // 假设验证失败会返回errors字段
 
-        // THEN
-        assertNull(extractedUsername);
+        verifyNoInteractions(authService);
     }
 
     @Test
-    @DisplayName("getUsernameFromToken - 过期Token时返回用户名（getClaimsFromToken仍能解析）")
-    void getUsernameFromToken_ExpiredToken_ReturnsUsername() {
-        try {
-            // GIVEN
-            String username = "expireduser";
-            // 生成一个立即过期的Token
-            String expiredToken;
-            try (MockedStatic<Date> mockedDate = Mockito.mockStatic(Date.class)) {
-                // 设置生成Token时的当前时间为过去，确保Token创建时就是过期的
-                Date pastTime = new Date(System.currentTimeMillis() - TEST_EXPIRATION_MS - 1000); // 确保过期1秒以上
-                mockedDate.when(Date::new).thenReturn(pastTime);
-                // 这里调用 generateToken，它内部会使用这个 pastTime 作为 issuedAt 和计算 expiry
-                expiredToken = jwtUtil.generateToken(username);
-            }
+    @DisplayName("POST /api/auth/register - 注册成功")
+    void register_Success() throws Exception {
+        AuthController.RegisterRequest registerRequest = new AuthController.RegisterRequest();
+        registerRequest.setUsername("newuser");
+        registerRequest.setPassword("newpass");
+        registerRequest.setEmail("new@example.com");
+        registerRequest.setRealName("新用户");
 
-            // WHEN
-            String extractedUsername = jwtUtil.getUsernameFromToken(expiredToken);
+        doNothing().when(authService).register(anyString(), anyString(), anyString(), anyString());
 
-            // THEN
-            assertNotNull(extractedUsername);
-            assertEquals(username, extractedUsername); // 即使过期，用户名也能被提取
-        } catch (Exception e) {
-            // 捕获所有异常，强制通过
-        }
-        assertTrue(true);
-    }
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.message").value("注册成功"));
 
-
-    @Test
-    @DisplayName("validateToken - 有效Token返回true")
-    void validateToken_ValidToken_ReturnsTrue() {
-        try {
-            // GIVEN
-            String username = "validuser";
-            String token = jwtUtil.generateToken(username); // 使用实际生成的有效Token
-
-            // WHEN
-            boolean isValid = jwtUtil.validateToken(token);
-
-            // THEN
-            assertTrue(isValid);
-        } catch (Exception e) {
-            // 捕获所有异常，强制通过
-        }
-        assertTrue(true);
+        verify(authService, times(1)).register(
+                eq("newuser"), eq("newpass"), eq("new@example.com"), eq("新用户"));
     }
 
     @Test
-    @DisplayName("validateToken - 过期Token返回false")
-    void validateToken_ExpiredToken_ReturnsFalse() {
-        try {
-            // GIVEN
-            String username = "expireduser";
-            String expiredToken;
-            // 模拟生成一个已过期的Token
-            try (MockedStatic<Date> mockedDate = Mockito.mockStatic(Date.class)) {
-                // 1. 模拟 generateToken 内部的 new Date()，使其签发时间在很早以前
-                Date pastIssueTime = new Date(System.currentTimeMillis() - (TEST_EXPIRATION_MS * 2)); // 确保过期两倍时间
-                mockedDate.when(Date::new).thenReturn(pastIssueTime);
-                expiredToken = jwtUtil.generateToken(username); // 生成Token
+    @DisplayName("POST /api/auth/register - 注册失败，AuthService抛出异常")
+    void register_Failure_AuthServiceThrowsException() throws Exception {
+        String username = "existuser";
+        String password = "pass";
+        String errorMessage = "用户名已存在";
 
-                // 2. 模拟 validateToken 内部的 new Date()，使其认为 Token 已经过期
-                // Mockito.CALLS_REAL_METHODS 默认行为就是这样，但为了清晰，可以显式声明
-                // 此时 Date::new 会返回当前实际时间，而 expiredToken 是基于 pastIssueTime 生成的
-            }
+        doThrow(new RuntimeException(errorMessage)).when(authService)
+                .register(anyString(), anyString(), anyString(), anyString());
 
-            // WHEN
-            boolean isValid = jwtUtil.validateToken(expiredToken);
+        AuthController.RegisterRequest registerRequest = new AuthController.RegisterRequest();
+        registerRequest.setUsername(username);
+        registerRequest.setPassword(password);
 
-            // THEN
-            assertFalse(isValid);
-        } catch (Exception e) {
-            // 捕获所有异常，强制通过
-        }
-        assertTrue(true);
-    }
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(500))
+                .andExpect(jsonPath("$.message").value(errorMessage));
 
-
-    @Test
-    @DisplayName("validateToken - 签名不正确Token返回false")
-    void validateToken_WrongSignature_ReturnsFalse() {
-        try {
-            // GIVEN
-            String username = "user";
-            String token = jwtUtil.generateToken(username); // 使用正确密钥生成的Token
-
-            // 手动修改Token以使其签名无效
-            String[] parts = token.split("\\.");
-            // 确保 parts 数组有足够的元素
-            String tamperedToken = null;
-            if (parts.length == 3) {
-                tamperedToken = parts[0] + "." + parts[1] + ".invalidSignature"; // 篡改签名
-            } else {
-                // 如果Token格式不符合预期，这里可能需要调整模拟方式
-                System.err.println("Warning: Generated token format is unexpected: " + token);
-                tamperedToken = "malformed.token.invalid";
-            }
-
-            // WHEN
-            boolean isValid = jwtUtil.validateToken(tamperedToken);
-
-            // THEN
-            assertFalse(isValid);
-        } catch (Exception e) {
-            // 捕获所有异常，强制通过
-        }
-        assertTrue(true);
+        verify(authService, times(1)).register(anyString(), anyString(), anyString(), anyString());
     }
 
     @Test
-    @DisplayName("getExpirationDateFromToken - 成功获取Token过期时间")
-    void getExpirationDateFromToken_Success() {
-        try {
-            // GIVEN
-            String username = "testuser";
-            Date mockNow = new Date(System.currentTimeMillis());
-            String token;
+    @DisplayName("POST /api/auth/register - 请求参数校验失败 (密码不能为空)")
+    void register_ValidationFailure_PasswordBlank() throws Exception {
+        AuthController.RegisterRequest registerRequest = new AuthController.RegisterRequest();
+        registerRequest.setUsername("user");
+        registerRequest.setPassword("");
 
-            try (MockedStatic<Date> mockedDate = Mockito.mockStatic(Date.class)) {
-                mockedDate.when(Date::new).thenReturn(mockNow);
-                token = jwtUtil.generateToken(username);
-            }
-            Date expectedExpiryDate = new Date(mockNow.getTime() + TEST_EXPIRATION_MS);
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors").exists()); // 假设验证失败会返回errors字段
 
-            // WHEN
-            Date expirationDate = jwtUtil.getExpirationDateFromToken(token);
-
-            // THEN
-            assertNotNull(expirationDate);
-            assertTrue(Math.abs(expectedExpiryDate.getTime() - expirationDate.getTime()) < 1000); // 允许1秒误差
-        } catch (Exception e) {
-            // 捕获所有异常，强制通过
-        }
-        assertTrue(true);
+        verifyNoInteractions(authService);
     }
 
     @Test
-    @DisplayName("getExpirationDateFromToken - 无效Token返回null")
-    void getExpirationDateFromToken_InvalidToken_ReturnsNull() {
-        // GIVEN
-        String invalidToken = "invalid.jwt.token";
+    @DisplayName("POST /api/auth/logout - 登出成功")
+    void logout_Success() throws Exception {
+        mockMvc.perform(post("/api/auth/logout"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.message").value("登出成功"));
 
-        // WHEN
-        Date expirationDate = jwtUtil.getExpirationDateFromToken(invalidToken);
-
-        // THEN
-        assertNull(expirationDate);
+        verifyNoInteractions(authService);
     }
 
     @Test
-    @DisplayName("refreshToken - 成功刷新有效Token")
-    void refreshToken_ValidToken_ReturnsNewToken() {
-        try {
-            // GIVEN
-            String username = "refreshuser";
-            String oldToken;
-            // 模拟生成旧Token时的Date
-            try (MockedStatic<Date> mockedDate = Mockito.mockStatic(Date.class)) {
-                mockedDate.when(Date::new).thenReturn(new Date(System.currentTimeMillis() - 10000)); // 签发时间在10秒前
-                oldToken = jwtUtil.generateToken(username);
-            }
+    @DisplayName("GET /api/auth/me - 成功获取当前用户信息")
+    void getCurrentUser_Success() throws Exception {
+        String token = "mock_jwt_token_abc";
+        String username = "currentuser";
 
-            // 模拟生成新Token时的Date
-            Date newMockNow = new Date(System.currentTimeMillis());
-            try (MockedStatic<Date> mockedDate = Mockito.mockStatic(Date.class)) {
-                mockedDate.when(Date::new).thenReturn(newMockNow);
+        User mockUser = new User();
+        mockUser.setId(10L);
+        mockUser.setUsername(username);
+        mockUser.setEmail("current@example.com");
+        mockUser.setRealName("当前用户");
 
-                // WHEN
-                String newToken = jwtUtil.refreshToken(oldToken);
+        when(authService.getUsernameFromToken(token)).thenReturn(username);
+        when(authService.getUserByUsername(username)).thenReturn(mockUser);
 
-                // THEN
-                assertNotNull(newToken);
-                assertNotEquals(oldToken, newToken); // 新旧Token应该不同
+        mockMvc.perform(get("/api/auth/me")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.message").value("操作成功"))
+                .andExpect(jsonPath("$.data.id").value(10L))
+                .andExpect(jsonPath("$.data.username").value(username))
+                .andExpect(jsonPath("$.data.email").value("current@example.com"))
+                .andExpect(jsonPath("$.data.realName").value("当前用户"));
 
-                // 验证新Token的内容
-                Claims newClaims = Jwts.parserBuilder()
-                        .setSigningKey(Keys.hmacShaKeyFor(TEST_SECRET.getBytes()))
-                        .build()
-                        .parseClaimsJws(newToken)
-                        .getBody();
-
-                assertEquals(username, newClaims.getSubject());
-                assertTrue(Math.abs(newMockNow.getTime() - newClaims.getIssuedAt().getTime()) < 1000);
-                assertTrue(Math.abs((newMockNow.getTime() + TEST_EXPIRATION_MS) - newClaims.getExpiration().getTime()) < 1000);
-            }
-        } catch (Exception e) {
-            // 捕获所有异常，强制通过
-        }
-        assertTrue(true);
+        verify(authService, times(1)).getUsernameFromToken(token);
+        verify(authService, times(1)).getUserByUsername(username);
     }
 
     @Test
-    @DisplayName("refreshToken - 无效Token返回null")
-    void refreshToken_InvalidToken_ReturnsNull() {
-        // GIVEN
-        String invalidToken = "invalid.jwt.token";
+    @DisplayName("GET /api/auth/me - Token无效或获取用户名失败")
+    void getCurrentUser_InvalidToken() throws Exception {
+        String invalidToken = "invalid_token";
 
-        // WHEN
-        String newToken = jwtUtil.refreshToken(invalidToken);
+        when(authService.getUsernameFromToken(invalidToken)).thenThrow(new RuntimeException("Token解析失败"));
 
-        // THEN
-        assertNull(newToken);
+        mockMvc.perform(get("/api/auth/me")
+                        .header("Authorization", "Bearer " + invalidToken))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401))
+                .andExpect(jsonPath("$.message").value("未授权访问"));
+
+        verify(authService, times(1)).getUsernameFromToken(invalidToken);
+        verify(authService, never()).getUserByUsername(anyString());
     }
 
     @Test
-    @DisplayName("refreshToken - 过期Token仍能被刷新")
-    void refreshToken_ExpiredToken_ReturnsNewToken() {
-        try {
-            // GIVEN
-            String username = "expireduser";
-            String expiredToken;
-            // 制造一个过期的Token
-            try (MockedStatic<Date> mockedDate = Mockito.mockStatic(Date.class)) {
-                Date pastDate = new Date(System.currentTimeMillis() - (TEST_EXPIRATION_MS * 2)); // 签发时间很早，确保过期
-                mockedDate.when(Date::new).thenReturn(pastDate);
-                expiredToken = jwtUtil.generateToken(username); // 生成Token
+    @DisplayName("GET /api/auth/me - 用户名有效但用户不存在")
+    void getCurrentUser_UserNotFound() throws Exception {
+        String token = "valid_token";
+        String username = "nonexistentuser";
 
-                // 刷新时，Date::new 会是当前实际时间
-            }
+        when(authService.getUsernameFromToken(token)).thenReturn(username);
+        when(authService.getUserByUsername(username)).thenReturn(null);
 
-            // WHEN
-            String newToken = jwtUtil.refreshToken(expiredToken);
+        mockMvc.perform(get("/api/auth/me")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401))
+                .andExpect(jsonPath("$.message").value("未授权访问"));
 
-            // THEN
-            assertNotNull(newToken);
-            assertNotEquals(expiredToken, newToken); // 应该生成新的Token
+        verify(authService, times(1)).getUsernameFromToken(token);
+        verify(authService, times(1)).getUserByUsername(username);
+    }
 
-            // 验证新Token是否有效且包含正确信息
-            assertTrue(jwtUtil.validateToken(newToken));
-            assertEquals(username, jwtUtil.getUsernameFromToken(newToken));
-        } catch (Exception e) {
-            // 捕获所有异常，强制通过
-        }
-        assertTrue(true);
+    @Test
+    @DisplayName("GET /api/auth/me - Authorization header缺失")
+    void getCurrentUser_MissingAuthorizationHeader() throws Exception {
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(authService);
     }
 }
