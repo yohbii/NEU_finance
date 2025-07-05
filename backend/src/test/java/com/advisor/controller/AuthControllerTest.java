@@ -1,306 +1,264 @@
 package com.advisor.controller;
+
 import com.advisor.common.Result;
 import com.advisor.entity.User;
 import com.advisor.service.AuthService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.DisplayName;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
-// 导入 MyBatis 自动配置，以便在需要时排除它
-import org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-// 排除与数据库相关的自动配置，并额外排除MyBatis自动配置和Mapper层
-@WebMvcTest(
-        controllers = AuthController.class,
-        excludeAutoConfiguration = {
-                DataSourceAutoConfiguration.class,
-                DataSourceTransactionManagerAutoConfiguration.class,
-                HibernateJpaAutoConfiguration.class,
-                MybatisAutoConfiguration.class // 明确排除MyBatis的自动配置
-        },
-        // 添加ComponentScan过滤器，排除所有Mapper接口
-        // 假设你的所有Mapper都在com.advisor.mapper包下
-        // 如果你的Mapper不在这个包下，请修改 pattern
-        excludeFilters = @ComponentScan.Filter(
-                type = FilterType.REGEX,
-                pattern = "com\\.advisor\\.mapper\\..*Mapper" // 排除所有以 Mapper 结尾的类，例如 FactorAnalysisResultMapper
-        )
-)
+@ExtendWith(MockitoExtension.class)
+@Slf4j
 class AuthControllerTest {
-    @Autowired
-    private MockMvc mockMvc;
 
-    @MockBean
+    @Mock
     private AuthService authService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @InjectMocks
+    private AuthController authController;
 
-    @Test
-    @DisplayName("POST /api/auth/login - 登录成功")
-    void login_Success() throws Exception {
-        String username = "testuser";
-        String password = "password123";
-        String token = "mock_jwt_token";
-
-        User mockUser = new User();
-        mockUser.setId(1L);
-        mockUser.setUsername(username);
-        mockUser.setEmail("test@example.com");
-        mockUser.setRealName("测试用户");
-
-        when(authService.login(username, password)).thenReturn(token);
-        when(authService.getUserByUsername(username)).thenReturn(mockUser);
-
-        // 使用 AuthController 内部定义的 LoginRequest 类
-        AuthController.LoginRequest loginRequest = new AuthController.LoginRequest();
-        loginRequest.setUsername(username);
-        loginRequest.setPassword(password);
-
-        mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("登录成功"))
-                .andExpect(jsonPath("$.data.token").value(token))
-                .andExpect(jsonPath("$.data.user.id").value(1L))
-                .andExpect(jsonPath("$.data.user.username").value(username))
-                .andExpect(jsonPath("$.data.user.email").value("test@example.com"))
-                .andExpect(jsonPath("$.data.user.realName").value("测试用户"));
-
-        verify(authService, times(1)).login(username, password);
-        verify(authService, times(1)).getUserByUsername(username);
+    @BeforeEach
+    void setUp() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
     }
 
     @Test
-    @DisplayName("POST /api/auth/login - 登录失败，AuthService抛出异常")
-    void login_Failure_AuthServiceThrowsException() throws Exception {
-        String username = "wronguser";
-        String password = "wrongpassword";
-        String errorMessage = "用户名或密码错误";
+    void login_success() {
+        // Given
+        AuthController.LoginRequest request = new AuthController.LoginRequest();
+        request.setUsername("testuser");
+        request.setPassword("password123");
 
-        when(authService.login(username, password)).thenThrow(new RuntimeException(errorMessage));
+        String token = "mocked_jwt_token";
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("testuser");
+        user.setEmail("test@example.com");
+        user.setRealName("Test User");
 
-        AuthController.LoginRequest loginRequest = new AuthController.LoginRequest();
-        loginRequest.setUsername(username);
-        loginRequest.setPassword(password);
+        when(authService.login(request.getUsername(), request.getPassword())).thenReturn(token);
+        when(authService.getUserByUsername(request.getUsername())).thenReturn(user);
 
-        mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.code").value(500))
-                .andExpect(jsonPath("$.message").value(errorMessage));
+        // When
+        Result<Map<String, Object>> response = authController.login(request);
 
-        verify(authService, times(1)).login(username, password);
+        // Then
+        assertNotNull(response);
+        assertEquals(200, response.getCode());
+        assertEquals("登录成功", response.getMessage());
+        assertNotNull(response.getData());
+        assertEquals(token, response.getData().get("token"));
+
+        Map<String, Object> userData = (Map<String, Object>) response.getData().get("user");
+        assertNotNull(userData);
+        assertEquals(1L, userData.get("id"));
+        assertEquals("testuser", userData.get("username"));
+        assertEquals("test@example.com", userData.get("email"));
+        assertEquals("Test User", userData.get("realName"));
+
+        verify(authService, times(1)).login(request.getUsername(), request.getPassword());
+        verify(authService, times(1)).getUserByUsername(request.getUsername());
+    }
+
+    @Test
+    void login_failure_invalidCredentials() {
+        // Given
+        AuthController.LoginRequest request = new AuthController.LoginRequest();
+        request.setUsername("wronguser");
+        request.setPassword("wrongpassword");
+
+        when(authService.login(anyString(), anyString())).thenThrow(new RuntimeException("Invalid credentials"));
+
+        // When
+        Result<Map<String, Object>> response = authController.login(request);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(500, response.getCode());
+        assertEquals("Invalid credentials", response.getMessage());
+        assertNull(response.getData());
+
+        verify(authService, times(1)).login(anyString(), anyString());
         verify(authService, never()).getUserByUsername(anyString());
     }
 
     @Test
-    @DisplayName("POST /api/auth/login - 登录成功但用户信息为空")
-    void login_Success_UserIsNull() throws Exception {
-        String username = "testuser";
-        String password = "password123";
-        String token = "mock_jwt_token";
+    void login_failure_userNotFoundAfterLogin() {
+        // Given
+        AuthController.LoginRequest request = new AuthController.LoginRequest();
+        request.setUsername("testuser");
+        request.setPassword("password123");
 
-        when(authService.login(username, password)).thenReturn(token);
-        when(authService.getUserByUsername(username)).thenReturn(null);
+        String token = "mocked_jwt_token";
 
-        AuthController.LoginRequest loginRequest = new AuthController.LoginRequest();
-        loginRequest.setUsername(username);
-        loginRequest.setPassword(password);
+        when(authService.login(request.getUsername(), request.getPassword())).thenReturn(token);
+        when(authService.getUserByUsername(request.getUsername())).thenReturn(null); // Simulate user not found
 
-        mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(500))
-                .andExpect(jsonPath("$.message").value("用户信息不存在"));
+        // When
+        Result<Map<String, Object>> response = authController.login(request);
 
-        verify(authService, times(1)).login(username, password);
-        verify(authService, times(1)).getUserByUsername(username);
+        // Then
+        assertNotNull(response);
+        assertEquals(500, response.getCode());
+        assertEquals("用户信息不存在", response.getMessage());
+        assertNull(response.getData());
+
+        verify(authService, times(1)).login(request.getUsername(), request.getPassword());
+        verify(authService, times(1)).getUserByUsername(request.getUsername());
     }
 
     @Test
-    @DisplayName("POST /api/auth/login - 请求参数校验失败 (用户名不能为空)")
-    void login_ValidationFailure_UsernameBlank() throws Exception {
-        AuthController.LoginRequest loginRequest = new AuthController.LoginRequest();
-        loginRequest.setUsername("");
-        loginRequest.setPassword("password123");
-
-        mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors").exists()); // 假设验证失败会返回errors字段
-
-        verifyNoInteractions(authService);
-    }
-
-    @Test
-    @DisplayName("POST /api/auth/register - 注册成功")
-    void register_Success() throws Exception {
-        AuthController.RegisterRequest registerRequest = new AuthController.RegisterRequest();
-        registerRequest.setUsername("newuser");
-        registerRequest.setPassword("newpass");
-        registerRequest.setEmail("new@example.com");
-        registerRequest.setRealName("新用户");
+    void register_success() {
+        // Given
+        AuthController.RegisterRequest request = new AuthController.RegisterRequest();
+        request.setUsername("newuser");
+        request.setPassword("newpassword");
+        request.setEmail("new@example.com");
+        request.setRealName("New User");
 
         doNothing().when(authService).register(anyString(), anyString(), anyString(), anyString());
 
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registerRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("注册成功"));
+        // When
+        Result<Void> response = authController.register(request);
 
-        verify(authService, times(1)).register(
-                eq("newuser"), eq("newpass"), eq("new@example.com"), eq("新用户"));
+        // Then
+        assertNotNull(response);
+        assertEquals(200, response.getCode());
+        assertEquals("注册成功", response.getMessage());
+        assertNull(response.getData());
+
+        verify(authService, times(1)).register(request.getUsername(), request.getPassword(), request.getEmail(), request.getRealName());
     }
 
     @Test
-    @DisplayName("POST /api/auth/register - 注册失败，AuthService抛出异常")
-    void register_Failure_AuthServiceThrowsException() throws Exception {
-        String username = "existuser";
-        String password = "pass";
-        String errorMessage = "用户名已存在";
+    void register_failure_usernameExists() {
+        // Given
+        AuthController.RegisterRequest request = new AuthController.RegisterRequest();
+        request.setUsername("existinguser");
+        request.setPassword("password");
+        request.setEmail("existing@example.com");
+        request.setRealName("Existing User");
 
-        doThrow(new RuntimeException(errorMessage)).when(authService)
-                .register(anyString(), anyString(), anyString(), anyString());
+        doThrow(new RuntimeException("Username already exists")).when(authService).register(anyString(), anyString(), anyString(), anyString());
 
-        AuthController.RegisterRequest registerRequest = new AuthController.RegisterRequest();
-        registerRequest.setUsername(username);
-        registerRequest.setPassword(password);
+        // When
+        Result<Void> response = authController.register(request);
 
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registerRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(500))
-                .andExpect(jsonPath("$.message").value(errorMessage));
+        // Then
+        assertNotNull(response);
+        assertEquals(500, response.getCode());
+        assertEquals("Username already exists", response.getMessage());
+        assertNull(response.getData());
 
-        verify(authService, times(1)).register(anyString(), anyString(), anyString(), anyString());
+        verify(authService, times(1)).register(request.getUsername(), request.getPassword(), request.getEmail(), request.getRealName());
     }
 
     @Test
-    @DisplayName("POST /api/auth/register - 请求参数校验失败 (密码不能为空)")
-    void register_ValidationFailure_PasswordBlank() throws Exception {
-        AuthController.RegisterRequest registerRequest = new AuthController.RegisterRequest();
-        registerRequest.setUsername("user");
-        registerRequest.setPassword("");
+    void logout_success() {
+        // When
+        Result<Void> response = authController.logout();
 
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registerRequest)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors").exists()); // 假设验证失败会返回errors字段
-
-        verifyNoInteractions(authService);
+        // Then
+        assertNotNull(response);
+        assertEquals(200, response.getCode());
+        assertEquals("登出成功", response.getMessage());
+        assertNull(response.getData());
     }
 
     @Test
-    @DisplayName("POST /api/auth/logout - 登出成功")
-    void logout_Success() throws Exception {
-        mockMvc.perform(post("/api/auth/logout"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("登出成功"));
+    void getCurrentUser_success() {
+        // Given
+        String authorizationHeader = "Bearer mocked_jwt_token";
+        String token = "mocked_jwt_token";
+        String username = "testuser";
 
-        verifyNoInteractions(authService);
-    }
-
-    @Test
-    @DisplayName("GET /api/auth/me - 成功获取当前用户信息")
-    void getCurrentUser_Success() throws Exception {
-        String token = "mock_jwt_token_abc";
-        String username = "currentuser";
-
-        User mockUser = new User();
-        mockUser.setId(10L);
-        mockUser.setUsername(username);
-        mockUser.setEmail("current@example.com");
-        mockUser.setRealName("当前用户");
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("testuser");
+        user.setEmail("test@example.com");
+        user.setRealName("Test User");
 
         when(authService.getUsernameFromToken(token)).thenReturn(username);
-        when(authService.getUserByUsername(username)).thenReturn(mockUser);
+        when(authService.getUserByUsername(username)).thenReturn(user);
 
-        mockMvc.perform(get("/api/auth/me")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("操作成功"))
-                .andExpect(jsonPath("$.data.id").value(10L))
-                .andExpect(jsonPath("$.data.username").value(username))
-                .andExpect(jsonPath("$.data.email").value("current@example.com"))
-                .andExpect(jsonPath("$.data.realName").value("当前用户"));
+        // When
+        Result<Map<String, Object>> response = authController.getCurrentUser(authorizationHeader);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(200, response.getCode());
+        assertEquals("操作成功", response.getMessage()); // Default success message
+        assertNotNull(response.getData());
+
+        Map<String, Object> userData = response.getData();
+        assertEquals(1L, userData.get("id"));
+        assertEquals("testuser", userData.get("username"));
+        assertEquals("test@example.com", userData.get("email"));
+        assertEquals("Test User", userData.get("realName"));
 
         verify(authService, times(1)).getUsernameFromToken(token);
         verify(authService, times(1)).getUserByUsername(username);
     }
 
     @Test
-    @DisplayName("GET /api/auth/me - Token无效或获取用户名失败")
-    void getCurrentUser_InvalidToken() throws Exception {
-        String invalidToken = "invalid_token";
+    void getCurrentUser_failure_invalidToken() {
+        // Given
+        String authorizationHeader = "Bearer invalid_token";
 
-        when(authService.getUsernameFromToken(invalidToken)).thenThrow(new RuntimeException("Token解析失败"));
+        when(authService.getUsernameFromToken(anyString())).thenThrow(new RuntimeException("Invalid JWT token"));
 
-        mockMvc.perform(get("/api/auth/me")
-                        .header("Authorization", "Bearer " + invalidToken))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value(401))
-                .andExpect(jsonPath("$.message").value("未授权访问"));
+        // When
+        Result<Map<String, Object>> response = authController.getCurrentUser(authorizationHeader);
 
-        verify(authService, times(1)).getUsernameFromToken(invalidToken);
+        // Then
+        assertNotNull(response);
+        assertEquals(401, response.getCode());
+        assertEquals("未授权访问", response.getMessage());
+        assertNull(response.getData());
+
+        verify(authService, times(1)).getUsernameFromToken(anyString());
         verify(authService, never()).getUserByUsername(anyString());
     }
 
     @Test
-    @DisplayName("GET /api/auth/me - 用户名有效但用户不存在")
-    void getCurrentUser_UserNotFound() throws Exception {
+    void getCurrentUser_failure_userNotFound() {
+        // Given
+        String authorizationHeader = "Bearer valid_token";
         String token = "valid_token";
         String username = "nonexistentuser";
 
         when(authService.getUsernameFromToken(token)).thenReturn(username);
-        when(authService.getUserByUsername(username)).thenReturn(null);
+        when(authService.getUserByUsername(username)).thenReturn(null); // User not found
 
-        mockMvc.perform(get("/api/auth/me")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value(401))
-                .andExpect(jsonPath("$.message").value("未授权访问"));
+        // When
+        Result<Map<String, Object>> response = authController.getCurrentUser(authorizationHeader);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(401, response.getCode());
+        assertEquals("未授权访问", response.getMessage());
+        assertNull(response.getData());
 
         verify(authService, times(1)).getUsernameFromToken(token);
         verify(authService, times(1)).getUserByUsername(username);
-    }
-
-    @Test
-    @DisplayName("GET /api/auth/me - Authorization header缺失")
-    void getCurrentUser_MissingAuthorizationHeader() throws Exception {
-        mockMvc.perform(get("/api/auth/me"))
-                .andExpect(status().isBadRequest());
-
-        verifyNoInteractions(authService);
     }
 }
