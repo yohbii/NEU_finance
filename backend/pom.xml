@@ -192,7 +192,7 @@
                         <exclude>**/common/**/*</exclude>
                         <exclude>**/config/**/*</exclude>
                         <exclude>**/filter/**/*</exclude>
-                        <exclude>**/mapper/**/*</exclude>
+<!--                        <exclude>**/mapper/**/*</exclude>-->
 <!--                        <exclude>**/utils/**/*</exclude>-->
                         <exclude>**/exception/**/*</exclude>
                     </excludes>
